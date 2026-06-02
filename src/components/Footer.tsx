@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 
 /* ─── Social icon SVGs ─────────────────────────────────────────── */
 const TwitterX = () => (
@@ -83,6 +83,15 @@ const legalLinks = [
 ];
 
 export default function Footer() {
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
+
+  const toggleSection = (heading: string) => {
+    setOpenSections((prev) => ({
+      ...prev,
+      [heading]: !prev[heading]
+    }));
+  };
+
   return (
     <footer className="relative mt-0 border-t border-neutral-200/50 dark:border-neutral-800/60 bg-white dark:bg-neutral-950 transition-colors duration-300">
       
@@ -93,10 +102,10 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-12 sm:pt-16 pb-10">
 
         {/* Brand + columns grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-8 lg:gap-10">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-8 lg:gap-10">
 
           {/* Brand column */}
-          <div className="col-span-2 sm:col-span-3 lg:col-span-1 space-y-5">
+          <div className="col-span-1 md:col-span-3 lg:col-span-1 space-y-5 mb-4 md:mb-0">
             <a href="/" className="flex items-center gap-2 group">
               <div className="w-8 h-8 rounded-xl bg-indigo-600 flex items-center justify-center shadow-md shadow-indigo-600/20 group-hover:scale-105 transition-transform">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -126,9 +135,9 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Link columns */}
+          {/* Link columns — Desktop layout (hidden on mobile, visible on md/lg) */}
           {footerColumns.map((col) => (
-            <div key={col.heading} className="space-y-4">
+            <div key={col.heading} className="hidden md:block space-y-4">
               <h4 className="text-[11px] font-extrabold uppercase tracking-widest text-neutral-900 dark:text-white">
                 {col.heading}
               </h4>
@@ -146,6 +155,54 @@ export default function Footer() {
               </ul>
             </div>
           ))}
+        </div>
+
+        {/* Accordions layout — Mobile layout (visible below md) */}
+        <div className="md:hidden mt-8 border-t border-neutral-200/50 dark:border-neutral-800/60 divide-y divide-neutral-200/50 dark:divide-neutral-800/60">
+          {footerColumns.map((col) => {
+            const isOpen = !!openSections[col.heading];
+            return (
+              <div key={col.heading} className="py-1">
+                <button
+                  onClick={() => toggleSection(col.heading)}
+                  className="w-full py-4 flex items-center justify-between text-left cursor-pointer group"
+                >
+                  <span className="text-[12px] font-bold text-neutral-800 dark:text-neutral-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors uppercase tracking-wider">
+                    {col.heading}
+                  </span>
+                  <svg
+                    className={`w-4 h-4 text-neutral-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                  >
+                    <path d="m6 9 6 6 6-6" />
+                  </svg>
+                </button>
+                
+                {/* Expandable Links list */}
+                <div
+                  className={`overflow-hidden transition-all duration-300 ${
+                    isOpen ? 'max-h-80 opacity-100 pb-4' : 'max-h-0 opacity-0'
+                  }`}
+                >
+                  <ul className="space-y-3 pl-2">
+                    {col.links.map((link) => (
+                      <li key={link}>
+                        <a
+                          href="#"
+                          className="text-[13px] text-neutral-550 dark:text-neutral-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                        >
+                          {link}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         {/* ── Divider ─────────────────────────────────────── */}
