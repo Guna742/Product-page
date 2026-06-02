@@ -13,6 +13,11 @@ import {
 import { useTheme } from '@/components/ThemeContext';
 import confetti from 'canvas-confetti';
 
+
+
+import { PiCompassDuotone, PiDownloadSimpleDuotone } from 'react-icons/pi';
+
+
 interface AppItem {
   id: string;
   name: string;
@@ -269,7 +274,7 @@ export default function AllProducts() {
       category: 'Sales & Marketing',
       accent: 'indigo',
       popular: true,
-      icon: <Layers className="text-indigo-600 dark:text-indigo-400" size={18} />
+      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>stacked_line_chart</span>
     },
     {
       id: 'bigin',
@@ -279,7 +284,7 @@ export default function AllProducts() {
       category: 'Sales & Marketing',
       accent: 'indigo',
       popular: false,
-      icon: <Activity className="text-indigo-600 dark:text-indigo-400" size={18} />
+      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>trending_up</span>
     },
     {
       id: 'campaigns',
@@ -289,7 +294,7 @@ export default function AllProducts() {
       category: 'Sales & Marketing',
       accent: 'indigo',
       popular: false,
-      icon: <Mail className="text-indigo-600 dark:text-indigo-400" size={18} />
+      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>campaign</span>
     },
     {
       id: 'social',
@@ -299,7 +304,7 @@ export default function AllProducts() {
       category: 'Sales & Marketing',
       accent: 'indigo',
       popular: true,
-      icon: <MessageSquare className="text-indigo-600 dark:text-indigo-400" size={18} />
+      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>chat</span>
     },
     {
       id: 'salesiq',
@@ -309,7 +314,7 @@ export default function AllProducts() {
       category: 'Sales & Marketing',
       accent: 'indigo',
       popular: false,
-      icon: <Eye className="text-indigo-600 dark:text-indigo-400" size={18} />
+      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>visibility</span>
     },
     {
       id: 'pagesense',
@@ -319,7 +324,7 @@ export default function AllProducts() {
       category: 'Sales & Marketing',
       accent: 'indigo',
       popular: false,
-      icon: <Sliders className="text-indigo-600 dark:text-indigo-400" size={18} />
+      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>data_thresholding</span>
     },
     
     // Finance & Accounting
@@ -331,7 +336,7 @@ export default function AllProducts() {
       category: 'Finance & Accounting',
       accent: 'emerald',
       popular: true,
-      icon: <DollarSign className="text-emerald-600 dark:text-emerald-400" size={18} />
+      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>account_balance_wallet</span>
     },
     {
       id: 'invoice',
@@ -341,7 +346,7 @@ export default function AllProducts() {
       category: 'Finance & Accounting',
       accent: 'emerald',
       popular: false,
-      icon: <FileText className="text-emerald-600 dark:text-emerald-400" size={18} />
+      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>receipt_long</span>
     },
     {
       id: 'expense',
@@ -351,7 +356,7 @@ export default function AllProducts() {
       category: 'Finance & Accounting',
       accent: 'emerald',
       popular: false,
-      icon: <Check className="text-emerald-600 dark:text-emerald-400" size={18} />
+      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>fact_check</span>
     },
     {
       id: 'subscriptions',
@@ -361,7 +366,7 @@ export default function AllProducts() {
       category: 'Finance & Accounting',
       accent: 'emerald',
       popular: true,
-      icon: <Sliders className="text-emerald-600 dark:text-emerald-400" size={18} />
+      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>data_thresholding</span>
     },
     {
       id: 'inventory',
@@ -371,7 +376,7 @@ export default function AllProducts() {
       category: 'Finance & Accounting',
       accent: 'emerald',
       popular: false,
-      icon: <Layers className="text-emerald-600 dark:text-emerald-400" size={18} />
+      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>stacked_line_chart</span>
     },
 
     // Email, Storage & Collaboration
@@ -383,7 +388,7 @@ export default function AllProducts() {
       category: 'Email & Collaboration',
       accent: 'amber',
       popular: true,
-      icon: <Mail className="text-amber-500" size={18} />
+      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>campaign</span>
     },
     {
       id: 'cliq',
@@ -393,7 +398,7 @@ export default function AllProducts() {
       category: 'Email & Collaboration',
       accent: 'amber',
       popular: false,
-      icon: <MessageSquare className="text-amber-500" size={18} />
+      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>chat</span>
     },
     {
       id: 'workdrive',
@@ -403,7 +408,7 @@ export default function AllProducts() {
       category: 'Email & Collaboration',
       accent: 'amber',
       popular: false,
-      icon: <HardDrive className="text-amber-500" size={18} />
+      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>folder</span>
     },
     {
       id: 'meeting',
@@ -413,7 +418,7 @@ export default function AllProducts() {
       category: 'Email & Collaboration',
       accent: 'amber',
       popular: false,
-      icon: <Volume2 className="text-amber-500" size={18} />
+      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>video_call</span>
     },
 
     // Project & Task Management
@@ -425,7 +430,7 @@ export default function AllProducts() {
       category: 'Project & Task Management',
       accent: 'violet',
       popular: true,
-      icon: <Calendar className="text-violet-500" size={18} />
+      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>task</span>
     },
     {
       id: 'sprints',
@@ -435,7 +440,7 @@ export default function AllProducts() {
       category: 'Project & Task Management',
       accent: 'violet',
       popular: false,
-      icon: <GitBranch className="text-violet-500" size={18} />
+      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>account_tree</span>
     },
 
     // Human Resources
@@ -447,7 +452,7 @@ export default function AllProducts() {
       category: 'Human Resources',
       accent: 'rose',
       popular: false,
-      icon: <UserCheck className="text-rose-500" size={18} />
+      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>groups</span>
     },
     {
       id: 'recruit',
@@ -457,7 +462,7 @@ export default function AllProducts() {
       category: 'Human Resources',
       accent: 'rose',
       popular: true,
-      icon: <Briefcase className="text-rose-500" size={18} />
+      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>work</span>
     },
 
     // Security & IT Management
@@ -469,7 +474,7 @@ export default function AllProducts() {
       category: 'IT & Security Management',
       accent: 'cyan',
       popular: true,
-      icon: <Lock className="text-cyan-500" size={18} />
+      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>lock</span>
     },
     {
       id: 'site24x7',
@@ -479,7 +484,7 @@ export default function AllProducts() {
       category: 'IT & Security Management',
       accent: 'cyan',
       popular: false,
-      icon: <Activity className="text-cyan-500" size={18} />
+      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>trending_up</span>
     },
 
     // Developer Platforms & Automations
@@ -491,7 +496,7 @@ export default function AllProducts() {
       category: 'Developer & Automations',
       accent: 'fuchsia',
       popular: true,
-      icon: <Database className="text-fuchsia-500" size={18} />
+      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>database</span>
     },
     {
       id: 'flow',
@@ -501,7 +506,7 @@ export default function AllProducts() {
       category: 'Developer & Automations',
       accent: 'fuchsia',
       popular: false,
-      icon: <Zap className="text-fuchsia-500" size={18} />
+      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>bolt</span>
     },
     {
       id: 'analytics',
@@ -511,7 +516,7 @@ export default function AllProducts() {
       category: 'Developer & Automations',
       accent: 'fuchsia',
       popular: true,
-      icon: <Sliders className="text-fuchsia-500" size={18} />
+      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>data_thresholding</span>
     },
 
     // Commerce & Legal
@@ -523,7 +528,7 @@ export default function AllProducts() {
       category: 'Commerce & Legal',
       accent: 'teal',
       popular: false,
-      icon: <ShoppingCart className="text-teal-500" size={18} />
+      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>storefront</span>
     },
     {
       id: 'sign',
@@ -533,7 +538,7 @@ export default function AllProducts() {
       category: 'Commerce & Legal',
       accent: 'teal',
       popular: false,
-      icon: <Shield className="text-teal-500" size={18} />
+      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>draw</span>
     },
   ];
 
@@ -764,7 +769,7 @@ export default function AllProducts() {
                   {theme === 'dark' ? (
                     <Sparkles size={15} className="text-yellow-500" />
                   ) : (
-                    <Compass size={15} className="text-indigo-600" />
+                    <PiCompassDuotone size={18} className="text-indigo-600" />
                   )}
                 </motion.div>
               </AnimatePresence>
@@ -989,8 +994,8 @@ export default function AllProducts() {
 
                               <div>
                                 <div className="flex items-center justify-between mb-4">
-                                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white ${iconGradientClasses[app.accent] || 'bg-neutral-100'} group-hover:scale-108 transition-all duration-300`}>
-                                    {React.cloneElement(app.icon as React.ReactElement<{ className?: string; size?: number }>, { className: 'text-white', size: 20 })}
+                                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white ${iconGradientClasses[app.accent] || 'bg-neutral-100'} group-hover:scale-108 transition-all duration-300 shadow-sm opacity-95 group-hover:opacity-100`}>
+                                    {React.cloneElement(app.icon as React.ReactElement<any>, { className: ((app.icon as any).props?.className || '') + ' text-white', style: { ...((app.icon as any).props?.style || {}), fontSize: 26 } })}
                                   </div>
                                   
                                   <div className="flex items-center gap-2">
@@ -1070,8 +1075,8 @@ export default function AllProducts() {
                               onMouseMove={handleCardMouseMove}
                             >
                               <div className="flex items-center gap-4 flex-1 pr-4">
-                                <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-white shrink-0 ${iconGradientClasses[app.accent] || 'bg-neutral-100'} group-hover:scale-105 transition-all duration-300`}>
-                                  {React.cloneElement(app.icon as React.ReactElement<{ className?: string; size?: number }>, { className: 'text-white', size: 18 })}
+                                <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-white shrink-0 ${iconGradientClasses[app.accent] || 'bg-neutral-100'} group-hover:scale-105 transition-all duration-300 shadow-sm opacity-95 group-hover:opacity-100`}>
+                                  {React.cloneElement(app.icon as React.ReactElement<any>, { className: ((app.icon as any).props?.className || '') + ' text-white', style: { ...((app.icon as any).props?.style || {}), fontSize: 22 } })}
                                 </div>
                                 <div>
                                   <h4 className="text-[14px] sm:text-[15.5px] font-bold tracking-tight text-neutral-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 flex items-center gap-2 transition-colors duration-200">
@@ -1318,7 +1323,7 @@ export default function AllProducts() {
                       onClick={() => toggleActiveStack(id)}
                       className={`w-8 h-8 rounded-lg shrink-0 flex items-center justify-center text-white cursor-pointer active:scale-95 transition-transform ${iconGradientClasses[matched.accent] || 'bg-indigo-600'}`}
                     >
-                      {React.cloneElement(matched.icon as React.ReactElement<{ className?: string; size?: number }>, { className: 'text-white', size: 14 })}
+                      {React.cloneElement(matched.icon as React.ReactElement<any>, { className: ((matched.icon as any).props?.className || '') + ' text-white', style: { ...((matched.icon as any).props?.style || {}), fontSize: 14 } })}
                     </button>
                   );
                 })}
@@ -1336,10 +1341,10 @@ export default function AllProducts() {
               {/* Actions */}
               <div className="flex gap-1.5 shrink-0">
                 <button onClick={() => setIsFlowOpen(true)} className="w-9 h-9 rounded-xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center cursor-pointer active:scale-95 transition-transform">
-                  <Compass size={15} className="text-indigo-500" />
+                  <PiCompassDuotone size={18} className="text-indigo-500" />
                 </button>
                 <button onClick={handleExportConfig} className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center cursor-pointer active:scale-95 transition-transform shadow-md">
-                  <Download size={15} />
+                  <PiDownloadSimpleDuotone size={18} />
                 </button>
               </div>
             </div>
@@ -1358,7 +1363,7 @@ export default function AllProducts() {
                       className={`w-7 h-7 rounded-lg shrink-0 flex items-center justify-center text-white cursor-pointer hover:scale-110 transition-transform ${iconGradientClasses[matched.accent] || 'bg-indigo-600'}`}
                       title={`Remove ${matched.name}`}
                     >
-                      {React.cloneElement(matched.icon as React.ReactElement<{ className?: string; size?: number }>, { className: 'text-white', size: 13 })}
+                      {React.cloneElement(matched.icon as React.ReactElement<any>, { className: ((matched.icon as any).props?.className || '') + ' text-white', style: { ...((matched.icon as any).props?.style || {}), fontSize: 13 } })}
                     </button>
                   );
                 })}
@@ -1369,10 +1374,10 @@ export default function AllProducts() {
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <button onClick={() => setIsFlowOpen(true)} className="px-3 py-2 text-[11px] font-bold bg-neutral-100 dark:bg-neutral-800 rounded-xl flex items-center gap-1 cursor-pointer hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors">
-                  <Compass size={12} className="text-indigo-500" /><span>Integrate</span>
+                  <PiCompassDuotone size={16} className="text-indigo-500" /><span>Integrate</span>
                 </button>
                 <button onClick={handleExportConfig} className="px-3 py-2 text-[11px] font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl flex items-center gap-1 cursor-pointer shadow-sm transition-colors">
-                  <Download size={12} /><span>Export</span>
+                  <PiDownloadSimpleDuotone size={16} /><span>Export</span>
                 </button>
               </div>
             </div>
@@ -1403,7 +1408,7 @@ export default function AllProducts() {
               <div className="p-4 sm:p-6 pt-5 sm:pt-6 border-b border-neutral-200/50 dark:border-neutral-900 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-white shrink-0 ${iconGradientClasses[selectedAppForConsole.accent] || 'bg-neutral-100'}`}>
-                    {React.cloneElement(selectedAppForConsole.icon as React.ReactElement<{ className?: string; size?: number }>, { className: 'text-white', size: 18 })}
+                    {React.cloneElement(selectedAppForConsole.icon as React.ReactElement<any>, { className: ((selectedAppForConsole.icon as any).props?.className || '') + ' text-white', style: { ...((selectedAppForConsole.icon as any).props?.style || {}), fontSize: 18 } })}
                   </div>
                   <div>
                     <h3 className="text-[15px] sm:text-[16px] font-black text-neutral-900 dark:text-white tracking-tight flex items-center gap-1.5 flex-wrap">
@@ -1556,7 +1561,7 @@ export default function AllProducts() {
 
               <div className="mb-6 select-none">
                 <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200/20 text-indigo-600 dark:text-indigo-400 text-[10px] font-bold tracking-wider uppercase">
-                  <Compass size={12} className="animate-spin" style={{ animationDuration: '6s' }} />
+                  <PiCompassDuotone size={16} className="animate-spin" style={{ animationDuration: '6s' }} />
                   <span>Spatial Integration Map</span>
                 </span>
                 <h3 className="text-[17px] sm:text-[19px] font-black text-neutral-900 dark:text-white tracking-tight mt-1.5">
@@ -1610,7 +1615,7 @@ export default function AllProducts() {
                         }}
                       >
                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-md ${iconGradientClasses[matched.accent] || 'bg-indigo-650'}`}>
-                          {React.cloneElement(matched.icon as React.ReactElement<{ className?: string; size?: number }>, { className: 'text-white', size: 18 })}
+                          {React.cloneElement(matched.icon as React.ReactElement<any>, { className: ((matched.icon as any).props?.className || '') + ' text-white', style: { ...((matched.icon as any).props?.style || {}), fontSize: 18 } })}
                         </div>
                         <span className="text-[10px] font-extrabold text-neutral-800 dark:text-neutral-300 bg-white dark:bg-neutral-900 px-2 py-0.5 rounded-md shadow-sm border border-neutral-200/50 dark:border-neutral-800 leading-none">
                           {matched.name.split(' ').pop()}
