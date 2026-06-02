@@ -627,29 +627,40 @@ export default function AllProducts() {
       <div className="absolute inset-0 bg-grid-pattern opacity-60 pointer-events-none" />
 
       {/* HEADER SECTION */}
-      <header className="sticky top-0 z-40 backdrop-blur-md bg-white/70 dark:bg-neutral-950/70 border-b border-neutral-200/40 dark:border-neutral-800/40 shadow-sm transition-colors duration-300">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <a href="/" className="flex items-center gap-2.5 group">
-            <div className="w-8 h-8 rounded-xl bg-indigo-600 flex items-center justify-center shadow-md">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <header className="sticky top-0 z-40 backdrop-blur-md bg-white/80 dark:bg-neutral-950/80 border-b border-neutral-200/40 dark:border-neutral-800/40 shadow-sm transition-colors duration-300">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 sm:h-16 md:h-20 flex items-center justify-between gap-3">
+          <a href="/" className="flex items-center gap-2 sm:gap-2.5 group shrink-0">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-indigo-600 flex items-center justify-center shadow-md">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12 2L2 22h20L12 2zm0 4.5l6.5 12h-13L12 6.5z" fill="white" />
               </svg>
             </div>
-            <span className="font-bold text-xl tracking-tight text-neutral-900 dark:text-white">Aether Hub</span>
+            <span className="font-bold text-base sm:text-xl tracking-tight text-neutral-900 dark:text-white">Aether Hub</span>
           </a>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
+            {/* Active stack count badge — mobile shortcut */}
+            {activeStack.length > 0 && (
+              <button
+                onClick={() => setIsFlowOpen(true)}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 sm:hidden rounded-xl bg-indigo-600 text-white text-[11px] font-bold shadow-md cursor-pointer"
+              >
+                <Layers size={12} />
+                <span>{activeStack.length} Active</span>
+              </button>
+            )}
+
             <button
               onClick={handleOpenWizard}
-              className="px-5 py-2.5 text-xs sm:text-[14px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-200/20 hover:bg-indigo-100/50 dark:bg-indigo-950/30 dark:border-indigo-900/30 dark:text-indigo-400 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+              className="px-3 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-[14px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-200/20 hover:bg-indigo-100/50 dark:bg-indigo-950/30 dark:border-indigo-900/30 dark:text-indigo-400 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
             >
-              <HelpCircle size={15} className="animate-pulse" />
+              <HelpCircle size={14} className="animate-pulse" />
               <span className="hidden sm:inline">Product Finder</span>
             </button>
 
             <button
               onClick={toggleTheme}
-              className="w-10 h-10 rounded-xl flex items-center justify-center border border-neutral-200/50 dark:border-neutral-800/50 hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-all cursor-pointer text-neutral-700 dark:text-neutral-300 relative overflow-hidden"
+              className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center border border-neutral-200/50 dark:border-neutral-800/50 hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-all cursor-pointer text-neutral-700 dark:text-neutral-300 relative overflow-hidden"
               aria-label="Toggle Theme"
             >
               <AnimatePresence mode="wait">
@@ -661,9 +672,9 @@ export default function AllProducts() {
                   transition={{ duration: 0.15 }}
                 >
                   {theme === 'dark' ? (
-                    <Sparkles size={16} className="text-yellow-550 fill-yellow-500/25 animate-pulse" />
+                    <Sparkles size={15} className="text-yellow-500" />
                   ) : (
-                    <Compass size={16} className="text-indigo-650" />
+                    <Compass size={15} className="text-indigo-600" />
                   )}
                 </motion.div>
               </AnimatePresence>
@@ -673,78 +684,65 @@ export default function AllProducts() {
       </header>
 
       {/* BODY CONTENT GRID */}
-      <main className="max-w-7xl mx-auto px-6 py-12 relative z-10">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10 md:py-12 relative z-10">
         
         {/* SPOTLIGHT HERO ECOSYSTEM BANNER */}
-        <div className="w-full rounded-3xl border border-neutral-200/60 dark:border-neutral-800 bg-white dark:bg-neutral-900/60 p-6 sm:p-10 mb-16 relative overflow-hidden shadow-sm">
+        <div className="w-full rounded-2xl sm:rounded-3xl border border-neutral-200/60 dark:border-neutral-800 bg-white dark:bg-neutral-900/60 p-5 sm:p-8 lg:p-10 mb-8 sm:mb-12 md:mb-16 relative overflow-hidden shadow-sm">
           <div className="absolute top-[40%] right-[10%] w-80 h-80 rounded-full bg-indigo-500/5 blur-[120px] pointer-events-none" />
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-            <div className="lg:col-span-7 space-y-5">
-              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200/20 text-indigo-600 dark:text-indigo-400 text-[10px] font-bold tracking-wider uppercase">
-                <Cpu size={12} className="animate-pulse" />
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center">
+            <div className="lg:col-span-7 space-y-4">
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200/20 text-indigo-600 dark:text-indigo-400 text-[9px] sm:text-[10px] font-bold tracking-wider uppercase">
+                <Cpu size={10} className="animate-pulse" />
                 <span>UNIFIED ENTERPRISE OPERATING SUITE</span>
               </span>
               
-              <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-neutral-900 dark:text-white leading-[1.05] tracking-tight">
+              <h1 className="text-2xl sm:text-4xl lg:text-6xl font-black text-neutral-900 dark:text-white leading-[1.1] sm:leading-[1.05] tracking-tight">
                 Aether One:{' '}
                 <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 via-violet-500 to-fuchsia-600 dark:from-indigo-400 dark:via-purple-400 dark:to-pink-500 text-glow">
                   The ultimate operating shell.
                 </span>
               </h1>
               
-              <p className="text-base sm:text-lg text-neutral-500 dark:text-neutral-400 leading-relaxed max-w-2xl">
+              <p className="text-sm sm:text-base lg:text-lg text-neutral-500 dark:text-neutral-400 leading-relaxed">
                 Consolidate your entire business software stack. Access all 40+ spatial databases, cognitive reasoners, billing portals, HR portals, and IT endpoints with one single billing license.
               </p>
 
-              <div className="flex flex-wrap gap-4 pt-3">
+              <div className="flex flex-col xs:flex-row gap-3 pt-1">
                 <button
                   onClick={() => {
-                    confetti({
-                      particleCount: 120,
-                      spread: 60,
-                      origin: { y: 0.6 },
-                    });
+                    confetti({ particleCount: 120, spread: 60, origin: { y: 0.6 } });
                   }}
-                  className="px-6 py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-[13px] shadow-lg shadow-indigo-600/10 transition-all cursor-pointer flex items-center gap-1.5"
+                  className="flex-1 xs:flex-initial px-5 py-3 sm:py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-[13px] shadow-lg shadow-indigo-600/10 transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-[0.97]"
                 >
                   <span>Evaluate Aether One</span>
                   <ArrowRight size={14} />
                 </button>
                 <button
                   onClick={handleOpenWizard}
-                  className="px-6 py-3.5 rounded-xl border border-neutral-300 dark:border-neutral-800 bg-white/40 dark:bg-neutral-900/40 backdrop-blur-sm text-neutral-700 dark:text-neutral-300 font-bold text-xs sm:text-[13px] hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-all"
+                  className="flex-1 xs:flex-initial px-5 py-3 sm:py-3.5 rounded-xl border border-neutral-300 dark:border-neutral-800 bg-white/40 dark:bg-neutral-900/40 backdrop-blur-sm text-neutral-700 dark:text-neutral-300 font-bold text-xs sm:text-[13px] hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-all text-center active:scale-[0.97]"
                 >
                   Configure Custom Suite
                 </button>
               </div>
             </div>
 
-            {/* Graphic sidebar mock inside hero showcase */}
+            {/* Graphic sidebar — only on large screens */}
             <div className="lg:col-span-5 hidden lg:flex items-center justify-center">
               <div className="w-full max-w-sm aspect-[4/3] rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950 p-6 flex flex-col justify-between shadow-md relative overflow-hidden">
                 <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-transparent via-indigo-500 to-transparent animate-scanline" />
-                
                 <div className="flex items-center justify-between border-b border-neutral-200 dark:border-neutral-800/80 pb-3">
                   <span className="text-[11px] font-bold text-neutral-400 font-mono">CORE_STACKS_RECORDS</span>
                   <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-pulse" />
                 </div>
-                
                 <div className="space-y-2.5 py-4">
-                  <div className="h-6.5 rounded-lg bg-white dark:bg-neutral-900 border border-neutral-200/50 dark:border-neutral-800/80 px-3 flex items-center justify-between text-[11px] text-neutral-500 select-none">
-                    <span>Aether CRM + Aether Flow</span>
-                    <span className="text-indigo-600 font-bold">✓ Bound</span>
-                  </div>
-                  <div className="h-6.5 rounded-lg bg-white dark:bg-neutral-900 border border-neutral-200/50 dark:border-neutral-800/80 px-3 flex items-center justify-between text-[11px] text-neutral-500 select-none">
-                    <span>Aether Books + Subscriptions</span>
-                    <span className="text-emerald-600 font-bold">✓ Bound</span>
-                  </div>
-                  <div className="h-6.5 rounded-lg bg-white dark:bg-neutral-900 border border-neutral-200/50 dark:border-neutral-800/80 px-3 flex items-center justify-between text-[11px] text-neutral-500 select-none">
-                    <span>Aether Mail + Cliq Chat</span>
-                    <span className="text-amber-500 font-bold">✓ Bound</span>
-                  </div>
+                  {[['Aether CRM + Aether Flow','text-indigo-600'],['Aether Books + Subscriptions','text-emerald-600'],['Aether Mail + Cliq Chat','text-amber-500']].map(([label, cls]) => (
+                    <div key={label} className="h-7 rounded-lg bg-white dark:bg-neutral-900 border border-neutral-200/50 dark:border-neutral-800/80 px-3 flex items-center justify-between text-[11px] text-neutral-500 select-none">
+                      <span>{label}</span>
+                      <span className={`${cls} font-bold`}>✓ Bound</span>
+                    </div>
+                  ))}
                 </div>
-
                 <div className="flex items-center justify-between text-[9px] text-neutral-400 font-mono">
                   <span>Licensing: Unified Enterprise</span>
                   <span>v1.0.9</span>
@@ -755,93 +753,92 @@ export default function AllProducts() {
         </div>
 
         {/* CONTROLS HEADER BAR */}
-        <div className="flex flex-col md:flex-row gap-5 items-stretch md:items-center justify-between mb-10 pb-6 border-b border-neutral-200/50 dark:border-neutral-800">
-          
-          {/* Interactive Search input */}
-          <div className="relative flex items-center flex-1 max-w-md">
-            <Search className="absolute left-4 text-neutral-400 dark:text-neutral-500" size={16} />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search business application, feature tag..."
-              className="w-full bg-white dark:bg-neutral-900/60 pl-11 pr-5 py-3.5 rounded-2xl border border-neutral-200 dark:border-neutral-800 text-xs sm:text-[13px] text-neutral-800 dark:text-neutral-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 transition-all shadow-sm"
-            />
-            {search && (
-              <button
-                onClick={() => setSearch('')}
-                className="absolute right-3.5 w-6 h-6 rounded-full flex items-center justify-center hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors text-neutral-400 hover:text-neutral-600"
-              >
-                <X size={13} />
-              </button>
-            )}
-          </div>
+        <div className="flex flex-col gap-3 sm:gap-4 mb-6 sm:mb-8 md:mb-10 pb-5 sm:pb-6 border-b border-neutral-200/50 dark:border-neutral-800">
+          {/* Top row: Search + View Toggle */}
+          <div className="flex items-center gap-3">
+            <div className="relative flex items-center flex-1">
+              <Search className="absolute left-3.5 text-neutral-400 dark:text-neutral-500" size={15} />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search apps or features..."
+                className="w-full bg-white dark:bg-neutral-900/60 pl-10 pr-9 py-3 rounded-xl sm:rounded-2xl border border-neutral-200 dark:border-neutral-800 text-xs sm:text-[13px] text-neutral-800 dark:text-neutral-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 transition-all shadow-sm"
+              />
+              {search && (
+                <button
+                  onClick={() => setSearch('')}
+                  className="absolute right-3 w-6 h-6 rounded-full flex items-center justify-center hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors text-neutral-400 hover:text-neutral-600"
+                >
+                  <X size={12} />
+                </button>
+              )}
+            </div>
 
-          <div className="flex items-center justify-between sm:justify-start gap-4">
-            
-            {/* Recommendation badge clear anchor */}
-            {highlightedApps.length > 0 && (
-              <button
-                onClick={() => setHighlightedApps([])}
-                className="text-xs font-bold text-rose-500 hover:text-rose-600 bg-rose-50 hover:bg-rose-100/50 dark:bg-rose-950/20 dark:border-rose-900/30 px-3 py-2 rounded-xl border border-rose-200/10 transition-colors cursor-pointer flex items-center gap-1"
-              >
-                <X size={12} />
-                <span>Reset Wizard</span>
-              </button>
-            )}
-
-            {/* Layout view switcher toggle button */}
-            <div className="p-1 rounded-xl bg-neutral-100 dark:bg-neutral-900 flex items-center gap-1 border border-neutral-200/30 dark:border-neutral-800/80">
+            <div className="p-1 rounded-xl bg-neutral-100 dark:bg-neutral-900 flex items-center gap-0.5 border border-neutral-200/30 dark:border-neutral-800/80 shrink-0">
               <button
                 onClick={() => setViewMode('grid')}
-                className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
-                  viewMode === 'grid'
-                    ? 'bg-white dark:bg-neutral-800 text-indigo-600 dark:text-white shadow-sm'
-                    : 'text-neutral-400 hover:text-neutral-600'
+                className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
+                  viewMode === 'grid' ? 'bg-white dark:bg-neutral-800 text-indigo-600 dark:text-white shadow-sm' : 'text-neutral-400 hover:text-neutral-600'
                 }`}
                 aria-label="Grid View"
               >
-                <LayoutGrid size={15} />
+                <LayoutGrid size={14} />
               </button>
               <button
                 onClick={() => setViewMode('list')}
-                className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
-                  viewMode === 'list'
-                    ? 'bg-white dark:bg-neutral-850 text-indigo-600 dark:text-white shadow-sm'
-                    : 'text-neutral-400 hover:text-neutral-600'
+                className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
+                  viewMode === 'list' ? 'bg-white dark:bg-neutral-800 text-indigo-600 dark:text-white shadow-sm' : 'text-neutral-400 hover:text-neutral-600'
                 }`}
                 aria-label="List View"
               >
-                <List size={15} />
+                <List size={14} />
               </button>
             </div>
           </div>
+
+          {/* Bottom row: Wizard reset badge */}
+          {highlightedApps.length > 0 && (
+            <div className="flex items-center">
+              <button
+                onClick={() => setHighlightedApps([])}
+                className="text-xs font-bold text-rose-500 hover:text-rose-600 bg-rose-50 hover:bg-rose-100/50 dark:bg-rose-950/20 px-3 py-1.5 rounded-xl border border-rose-200/10 transition-colors cursor-pointer flex items-center gap-1"
+              >
+                <X size={11} />
+                <span>Clear Wizard Filter</span>
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* MAIN LAYOUT SPLIT (Sidebar Left, Apps Right) - wrapped in LayoutGroup */}
+        {/* MAIN LAYOUT SPLIT */}
         <LayoutGroup>
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-start">
             
-            {/* Floating Category Navigation Sidebar */}
-            <aside className="lg:col-span-3 lg:sticky lg:top-32 space-y-2 select-none">
-              <h4 className="text-[11px] font-extrabold uppercase tracking-widest text-neutral-400 dark:text-neutral-500 px-3 mb-4">
-                FILTER CATEGORY
+            {/* Category Navigation — horizontal scrollable pills on mobile, vertical sticky sidebar on desktop */}
+            <aside className="lg:col-span-3 lg:sticky lg:top-24 select-none">
+              <h4 className="text-[10px] font-extrabold uppercase tracking-widest text-neutral-400 dark:text-neutral-500 px-1 mb-2.5 hidden lg:block">
+                Filter Category
               </h4>
-              
-              <div className="flex flex-row lg:flex-col overflow-x-auto lg:overflow-x-visible pb-3 lg:pb-0 gap-1.5 scrollbar-none">
+
+              {/* Mobile: pill scroller */}
+              <div className="flex flex-row lg:flex-col overflow-x-auto lg:overflow-x-visible gap-2 lg:gap-1.5 pb-1 lg:pb-0 scrollbar-none -mx-1 px-1">
                 {categories.map((cat) => {
                   const isSelected = activeCategory === cat;
                   return (
                     <button
                       key={cat}
                       onClick={() => handleScrollToCategory(cat)}
-                      className={`relative w-full text-left px-4 py-3 rounded-xl text-[13px] sm:text-[14px] font-bold transition-all duration-200 shrink-0 cursor-pointer ${
-                        isSelected
-                          ? 'text-indigo-600 dark:text-white bg-white dark:bg-neutral-900 shadow-sm border border-neutral-200/50 dark:border-neutral-800'
-                          : 'text-neutral-500 hover:text-neutral-800 dark:text-neutral-400 dark:hover:text-neutral-200 hover:bg-neutral-100/40 dark:hover:bg-neutral-900/10'
-                      }`}
+                      className={`lg:w-full text-left shrink-0 cursor-pointer transition-all duration-200
+                        px-3.5 lg:px-4 py-2 lg:py-3 rounded-full lg:rounded-xl
+                        text-[11px] sm:text-[12px] lg:text-[13px] font-bold whitespace-nowrap
+                        ${
+                          isSelected
+                            ? 'text-white bg-indigo-600 lg:text-indigo-600 lg:bg-white lg:dark:bg-neutral-900 lg:dark:text-white shadow-sm lg:border lg:border-neutral-200/50 lg:dark:border-neutral-800'
+                            : 'text-neutral-500 bg-neutral-100 dark:bg-neutral-900/60 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200 lg:bg-transparent lg:dark:bg-transparent lg:hover:bg-neutral-100/60 lg:dark:hover:bg-neutral-900/30'
+                        }`}
                     >
-                      <span>{cat}</span>
+                      {cat}
                     </button>
                   );
                 })}
@@ -849,7 +846,7 @@ export default function AllProducts() {
             </aside>
 
             {/* Catalog Lists */}
-            <div className="lg:col-span-9 space-y-16">
+            <div className="lg:col-span-9 space-y-10 sm:space-y-14">
               
               {categories.filter(c => activeCategory === 'All' || c === activeCategory).map((catName) => {
                 if (catName === 'All') return null;
@@ -879,7 +876,7 @@ export default function AllProducts() {
                         // Bento Grid Mode
                         <motion.div
                           layout
-                          className="grid grid-cols-1 sm:grid-cols-2 gap-5"
+                          className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5"
                         >
                           {catApps.map((app) => (
                             <motion.div
@@ -1067,21 +1064,21 @@ export default function AllProducts() {
         </LayoutGroup>
       </main>
 
-      {/* FLOAT INTERACTIVE FINDER BUTTON */}
-      <div className="fixed bottom-6 right-6 z-40">
+      {/* FLOAT INTERACTIVE FINDER BUTTON — hidden on mobile when dock is visible */}
+      <div className={`fixed bottom-6 right-4 sm:right-6 z-40 ${activeStack.length > 0 ? 'hidden sm:block' : ''}`}>
         <button
           onClick={handleOpenWizard}
           className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center shadow-xl shadow-indigo-600/30 hover:scale-105 transition-all cursor-pointer animate-float"
           aria-label="Open Interactive Product Finder Wizard"
         >
-          <HelpCircle size={22} />
+          <HelpCircle size={20} />
         </button>
       </div>
 
-      {/* DYNAMIC FINDER MODAL DIALOG */}
+      {/* DYNAMIC FINDER MODAL DIALOG — bottom sheet on mobile, centered on desktop */}
       <AnimatePresence>
         {isWizardOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center px-6">
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:px-6">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -1091,11 +1088,11 @@ export default function AllProducts() {
             />
 
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 15 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              transition={{ duration: 0.25, ease: 'easeOut' }}
-              className="relative w-full max-w-lg bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-3xl p-6 sm:p-8 shadow-2xl z-10 flex flex-col justify-between min-h-[360px]"
+              initial={{ opacity: 0, y: '100%' }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: '100%' }}
+              transition={{ type: 'spring', damping: 28, stiffness: 220 }}
+              className="relative w-full sm:max-w-lg bg-white dark:bg-neutral-900 border-t sm:border border-neutral-200 dark:border-neutral-800 rounded-t-3xl sm:rounded-3xl px-5 py-6 sm:p-8 shadow-2xl z-10 flex flex-col justify-between min-h-[50vh] sm:min-h-[360px] max-h-[90vh] overflow-y-auto"
             >
               <button
                 onClick={() => setIsWizardOpen(false)}
@@ -1197,22 +1194,62 @@ export default function AllProducts() {
         )}
       </AnimatePresence>
 
-      {/* WORKSPACE SUITE BUILDER DOCK */}
+      {/* WORKSPACE SUITE BUILDER DOCK — full-width on mobile, floating pill on desktop */}
       <AnimatePresence>
         {activeStack.length > 0 && (
           <motion.div
-            initial={{ opacity: 0, y: 100 }}
+            initial={{ opacity: 0, y: 80 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 100 }}
-            transition={{ type: 'spring', damping: 20, stiffness: 100 }}
-            className="fixed bottom-6 left-6 right-6 md:left-auto md:right-1/2 md:translate-x-1/2 md:w-[600px] z-40 glassmorphism rounded-3xl px-5 py-4 shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-4 border border-neutral-200/50 dark:border-neutral-800"
+            exit={{ opacity: 0, y: 80 }}
+            transition={{ type: 'spring', damping: 22, stiffness: 120 }}
+            className="fixed bottom-0 left-0 right-0 sm:bottom-5 sm:left-1/2 sm:-translate-x-1/2 sm:w-[640px] z-40
+              glassmorphism sm:rounded-2xl
+              border-t sm:border border-neutral-200/60 dark:border-neutral-800/80
+              shadow-2xl"
           >
-            {/* Active Icons Dock */}
-            <div className="flex items-center gap-3 overflow-x-auto max-w-full pb-1 sm:pb-0 scrollbar-none">
-              <div className="flex items-center gap-1.5">
-                <span className="text-[10px] font-extrabold uppercase tracking-widest text-neutral-400 dark:text-neutral-500 mr-2 shrink-0">
-                  Active Suite
-                </span>
+            {/* Mobile: compact single row */}
+            <div className="flex items-center gap-3 px-4 py-3 sm:hidden">
+              {/* Icon strip */}
+              <div className="flex items-center gap-1.5 flex-1 overflow-x-auto scrollbar-none">
+                {activeStack.slice(0,6).map((id) => {
+                  const matched = applications.find(a => a.id === id);
+                  if (!matched) return null;
+                  return (
+                    <button
+                      key={id}
+                      onClick={() => toggleActiveStack(id)}
+                      className={`w-8 h-8 rounded-lg shrink-0 flex items-center justify-center text-white cursor-pointer active:scale-95 transition-transform ${iconGradientClasses[matched.accent] || 'bg-indigo-600'}`}
+                    >
+                      {React.cloneElement(matched.icon as React.ReactElement<{ className?: string; size?: number }>, { className: 'text-white', size: 14 })}
+                    </button>
+                  );
+                })}
+                {activeStack.length > 6 && (
+                  <span className="text-[10px] font-bold text-neutral-500 shrink-0">+{activeStack.length - 6}</span>
+                )}
+              </div>
+
+              {/* Price */}
+              <div className="shrink-0 text-right">
+                <div className="text-[13px] font-extrabold text-neutral-900 dark:text-white">${pricingSummary.totalCost}<span className="text-[9px] text-neutral-400">/mo</span></div>
+                {pricingSummary.discountPct > 0 && <div className="text-[9px] text-indigo-600 font-bold">{pricingSummary.discountPct}% off</div>}
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-1.5 shrink-0">
+                <button onClick={() => setIsFlowOpen(true)} className="w-9 h-9 rounded-xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center cursor-pointer active:scale-95 transition-transform">
+                  <Compass size={15} className="text-indigo-500" />
+                </button>
+                <button onClick={handleExportConfig} className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center cursor-pointer active:scale-95 transition-transform shadow-md">
+                  <Download size={15} />
+                </button>
+              </div>
+            </div>
+
+            {/* Desktop: full layout */}
+            <div className="hidden sm:flex items-center gap-4 px-5 py-3.5">
+              <div className="flex items-center gap-2 flex-1 overflow-x-auto scrollbar-none">
+                <span className="text-[9px] font-extrabold uppercase tracking-widest text-neutral-400 shrink-0">Suite</span>
                 {activeStack.map((id) => {
                   const matched = applications.find(a => a.id === id);
                   if (!matched) return null;
@@ -1220,44 +1257,24 @@ export default function AllProducts() {
                     <button
                       key={id}
                       onClick={() => toggleActiveStack(id)}
-                      className={`w-8 h-8 rounded-lg flex items-center justify-center text-white cursor-pointer hover:scale-110 transition-transform ${iconGradientClasses[matched.accent] || 'bg-indigo-600'}`}
-                      title={`Remove ${matched.name} from stack`}
+                      className={`w-7 h-7 rounded-lg shrink-0 flex items-center justify-center text-white cursor-pointer hover:scale-110 transition-transform ${iconGradientClasses[matched.accent] || 'bg-indigo-600'}`}
+                      title={`Remove ${matched.name}`}
                     >
-                      {React.cloneElement(matched.icon as React.ReactElement<{ className?: string; size?: number }>, { className: 'text-white', size: 15 })}
+                      {React.cloneElement(matched.icon as React.ReactElement<{ className?: string; size?: number }>, { className: 'text-white', size: 13 })}
                     </button>
                   );
                 })}
               </div>
-            </div>
-
-            {/* Calculator & Integrator Actions */}
-            <div className="flex items-center gap-4 shrink-0 justify-between w-full sm:w-auto border-t sm:border-t-0 pt-3 sm:pt-0 border-neutral-200/20">
-              <div className="text-left">
-                <div className="text-[12px] font-extrabold text-neutral-900 dark:text-white leading-none">
-                  ${pricingSummary.totalCost} <span className="text-[10px] font-medium text-neutral-400">/ mo</span>
-                </div>
-                <div className="text-[9px] font-semibold text-indigo-600 dark:text-indigo-400 mt-0.5">
-                  {pricingSummary.discountPct > 0 ? `${pricingSummary.discountPct}% Discount Applied` : 'Standard Pricing'}
-                </div>
+              <div className="shrink-0">
+                <div className="text-[12px] font-extrabold text-neutral-900 dark:text-white">${pricingSummary.totalCost} <span className="text-[10px] text-neutral-400 font-medium">/mo</span></div>
+                {pricingSummary.discountPct > 0 && <div className="text-[9px] text-indigo-600 font-bold">{pricingSummary.discountPct}% Discount</div>}
               </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setIsFlowOpen(true)}
-                  className="px-3.5 py-2 text-[11px] font-extrabold text-neutral-750 hover:text-neutral-950 dark:text-neutral-300 dark:hover:text-white bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded-xl transition-all cursor-pointer flex items-center gap-1"
-                  title="Visualize Suite Integration Flow"
-                >
-                  <Compass size={13} className="text-indigo-500" />
-                  <span>Integrate</span>
+              <div className="flex items-center gap-2 shrink-0">
+                <button onClick={() => setIsFlowOpen(true)} className="px-3 py-2 text-[11px] font-bold bg-neutral-100 dark:bg-neutral-800 rounded-xl flex items-center gap-1 cursor-pointer hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors">
+                  <Compass size={12} className="text-indigo-500" /><span>Integrate</span>
                 </button>
-
-                <button
-                  onClick={handleExportConfig}
-                  className="px-3.5 py-2 text-[11px] font-extrabold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md shadow-indigo-600/10 hover:scale-[1.02] transition-all cursor-pointer flex items-center gap-1"
-                  title="Copy Workspace Config JSON"
-                >
-                  <Download size={13} />
-                  <span>Export Config</span>
+                <button onClick={handleExportConfig} className="px-3 py-2 text-[11px] font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl flex items-center gap-1 cursor-pointer shadow-sm transition-colors">
+                  <Download size={12} /><span>Export</span>
                 </button>
               </div>
             </div>
@@ -1265,7 +1282,7 @@ export default function AllProducts() {
         )}
       </AnimatePresence>
 
-      {/* PLAYGROUND CONSOLE DRAWER */}
+      {/* PLAYGROUND CONSOLE DRAWER — full-screen on mobile, right panel on desktop */}
       <AnimatePresence>
         {isConsoleOpen && selectedAppForConsole && (
           <div className="fixed inset-0 z-50 overflow-hidden flex justify-end">
@@ -1282,37 +1299,37 @@ export default function AllProducts() {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-              className="relative w-full max-w-lg h-full bg-white dark:bg-neutral-950 border-l border-neutral-200 dark:border-neutral-900 shadow-2xl z-10 flex flex-col"
+              className="relative w-full sm:max-w-lg h-full bg-white dark:bg-neutral-950 sm:border-l border-neutral-200 dark:border-neutral-900 shadow-2xl z-10 flex flex-col"
             >
               {/* Header */}
-              <div className="p-6 border-b border-neutral-200/50 dark:border-neutral-900 flex items-center justify-between">
+              <div className="p-4 sm:p-6 pt-5 sm:pt-6 border-b border-neutral-200/50 dark:border-neutral-900 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-white ${iconGradientClasses[selectedAppForConsole.accent] || 'bg-neutral-100'}`}>
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-white shrink-0 ${iconGradientClasses[selectedAppForConsole.accent] || 'bg-neutral-100'}`}>
                     {React.cloneElement(selectedAppForConsole.icon as React.ReactElement<{ className?: string; size?: number }>, { className: 'text-white', size: 18 })}
                   </div>
                   <div>
-                    <h3 className="text-[16px] font-black text-neutral-900 dark:text-white tracking-tight flex items-center gap-1.5">
+                    <h3 className="text-[15px] sm:text-[16px] font-black text-neutral-900 dark:text-white tracking-tight flex items-center gap-1.5 flex-wrap">
                       <span>{selectedAppForConsole.name}</span>
                       <span className="text-[9px] uppercase font-mono px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 border border-indigo-200/10">
-                        Active Node
+                        Node Console
                       </span>
                     </h3>
-                    <p className="text-[11px] text-neutral-450 font-medium leading-none mt-1">
-                      Telemetry & deployment console
+                    <p className="text-[11px] text-neutral-500 font-medium leading-none mt-1">
+                      Telemetry &amp; deployment console
                     </p>
                   </div>
                 </div>
 
                 <button
                   onClick={() => setIsConsoleOpen(false)}
-                  className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-colors text-neutral-450 hover:text-neutral-750 cursor-pointer"
+                  className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-colors text-neutral-400 cursor-pointer shrink-0"
                 >
-                  <X size={15} />
+                  <X size={16} />
                 </button>
               </div>
 
-              {/* Content area: dashboard toggles + live log */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              {/* Content area */}
+              <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5">
                 {/* Description Card */}
                 <div className="bg-neutral-55 dark:bg-neutral-900/40 border border-neutral-200/50 dark:border-neutral-900 p-4 rounded-2xl">
                   <h4 className="text-[11px] font-extrabold text-neutral-400 dark:text-neutral-500 uppercase tracking-widest mb-1.5">
@@ -1364,7 +1381,7 @@ export default function AllProducts() {
                     </button>
                   </div>
 
-                  <div className="bg-neutral-950 text-neutral-100 rounded-2xl border border-neutral-900/80 p-4 font-mono text-[11px] sm:text-xs h-72 overflow-y-auto space-y-1.5 scrollbar-thin select-text">
+                  <div className="bg-neutral-950 text-neutral-100 rounded-2xl border border-neutral-900/80 p-3 sm:p-4 font-mono text-[10px] sm:text-xs h-56 sm:h-72 overflow-y-auto space-y-1.5 scrollbar-thin select-text">
                     {consoleLogs.map((log, idx) => (
                       <div key={idx} className="flex items-start gap-2.5 leading-snug">
                         <span className="text-neutral-500 select-none">{log.time}</span>
@@ -1386,28 +1403,26 @@ export default function AllProducts() {
                 </div>
               </div>
 
-              {/* Drawer Actions Footer */}
-              <div className="p-6 border-t border-neutral-200/50 dark:border-neutral-900 flex items-center justify-between gap-3">
+              {/* Drawer Actions Footer — safe area padding on mobile */}
+              <div className="p-4 sm:p-6 pb-safe sm:pb-6 border-t border-neutral-200/50 dark:border-neutral-900 flex items-center gap-3">
                 <button
-                  onClick={() => {
-                    toggleActiveStack(selectedAppForConsole.id);
-                  }}
-                  className={`flex-1 py-3 rounded-xl font-extrabold text-[12px] uppercase tracking-wide transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5 ${
+                  onClick={() => setIsConsoleOpen(false)}
+                  className="w-10 h-10 rounded-xl border border-neutral-200 dark:border-neutral-800 flex items-center justify-center text-neutral-500 cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-colors shrink-0 sm:hidden"
+                >
+                  <X size={16} />
+                </button>
+                <button
+                  onClick={() => toggleActiveStack(selectedAppForConsole.id)}
+                  className={`flex-1 py-3 sm:py-3.5 rounded-xl font-extrabold text-[12px] uppercase tracking-wide transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5 active:scale-[0.98] ${
                     activeStack.includes(selectedAppForConsole.id)
-                      ? 'bg-rose-50 hover:bg-rose-100 text-rose-500 dark:bg-rose-950/20 dark:hover:bg-rose-950/30'
+                      ? 'bg-rose-50 hover:bg-rose-100 text-rose-500 dark:bg-rose-950/20 dark:hover:bg-rose-950/30 border border-rose-200/20'
                       : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-md'
                   }`}
                 >
                   {activeStack.includes(selectedAppForConsole.id) ? (
-                    <>
-                      <Trash2 size={13} />
-                      <span>Decommission Node</span>
-                    </>
+                    <><Trash2 size={13} /><span>Decommission Node</span></>
                   ) : (
-                    <>
-                      <Plus size={13} />
-                      <span>Bind Node to Stack</span>
-                    </>
+                    <><Plus size={13} /><span>Bind Node to Stack</span></>
                   )}
                 </button>
               </div>
@@ -1525,12 +1540,12 @@ export default function AllProducts() {
       <AnimatePresence>
         {toastMessage && (
           <motion.div
-            initial={{ opacity: 0, y: 50, scale: 0.95 }}
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 50, scale: 0.95 }}
-            className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl bg-neutral-900 text-white text-xs font-semibold shadow-lg shadow-black/20 flex items-center gap-2 border border-neutral-800"
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            className="fixed top-20 sm:top-auto sm:bottom-24 left-1/2 -translate-x-1/2 z-[60] px-4 py-2.5 rounded-xl bg-neutral-900 dark:bg-neutral-800 text-white text-xs font-semibold shadow-xl shadow-black/30 flex items-center gap-2 border border-neutral-700 whitespace-nowrap"
           >
-            <Check size={14} className="text-emerald-500" />
+            <Check size={14} className="text-emerald-400 shrink-0" />
             <span>{toastMessage}</span>
           </motion.div>
         )}
