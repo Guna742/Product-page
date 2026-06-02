@@ -7,7 +7,8 @@ import {
   Terminal, Shield, Keyboard, Zap, GitBranch, Layers, Lock, Sliders, Cpu, Sparkles, 
   Activity, DollarSign, Calendar, MessageSquare, Briefcase, FileText, ShoppingCart, 
   Database, UserCheck, HardDrive, Mail, Eye, Info, Volume2, ArrowUpRight,
-  Plus, Trash2, Settings, Play, Pause, RefreshCw, SlidersHorizontal, Download, Code, Copy
+  Plus, Trash2, Settings, Play, Pause, RefreshCw, SlidersHorizontal, Download, Code, Copy,
+  ChevronRight
 } from 'lucide-react';
 import { useTheme } from '@/components/ThemeContext';
 import confetti from 'canvas-confetti';
@@ -44,6 +45,26 @@ export default function AllProducts() {
   const [consoleToggles, setConsoleToggles] = useState({ autoScale: false, highFreqSync: false, devBypass: false });
   const [isFlowOpen, setIsFlowOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isFooterVisible, setIsFooterVisible] = useState(false);
+
+  // Detect when footer is in view to hide bottom floating elements
+  useEffect(() => {
+    const footer = document.querySelector('footer');
+    if (!footer) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsFooterVisible(entry.isIntersecting);
+      },
+      {
+        root: null,
+        threshold: 0.05,
+      }
+    );
+
+    observer.observe(footer);
+    return () => observer.disconnect();
+  }, []);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -168,6 +189,10 @@ export default function AllProducts() {
 
   // Category Refs
   const categoryRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  // Right scroll panel ref (for split-scroll)
+  const scrollPanelRef = useRef<HTMLDivElement | null>(null);
+
+
 
   // Category specific premium glow and grading classes
   const accentClasses: Record<string, { border: string; text: string; bg: string; shadow: string }> = {
@@ -537,6 +562,7 @@ export default function AllProducts() {
   }, [search, activeCategory, highlightedApps, applications]);
 
   // Smooth scroll
+  // Smooth scroll
   const handleScrollToCategory = (catName: string) => {
     setActiveCategory(catName);
     setHighlightedApps([]);
@@ -545,12 +571,10 @@ export default function AllProducts() {
     } else {
       const ref = categoryRefs.current[catName];
       if (ref) {
-        const offset = 100;
-        const bodyRect = document.body.getBoundingClientRect().top;
-        const elementRect = ref.getBoundingClientRect().top;
-        const elementPosition = elementRect - bodyRect;
-        const offsetPosition = elementPosition - offset;
-
+        // Calculate offset (header height 80px + sticky search bar height 58px + margin 16px)
+        const headerOffset = 154;
+        const elementPosition = ref.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.scrollY - headerOffset;
         window.scrollTo({
           top: offsetPosition,
           behavior: 'smooth'
@@ -558,6 +582,72 @@ export default function AllProducts() {
       }
     }
   };
+
+  // IntersectionObserver — updates active category as window scrolls (exactly like Zoho)
+  useEffect(() => {
+    const intersectingMap: Record<string, boolean> = {};
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const cat = (entry.target as HTMLDivElement).dataset.category;
+          if (cat) {
+            intersectingMap[cat] = entry.isIntersecting;
+          }
+        });
+
+        // Check if we are scrolled to the very bottom of the page
+        const isAtBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 150;
+        
+        if (isAtBottom) {
+          const visibleCats = categories.filter((c) => c !== 'All' && categoryRefs.current[c]);
+          if (visibleCats.length > 0) {
+            setActiveCategory(visibleCats[visibleCats.length - 1]);
+            return;
+          }
+        }
+
+        // Find all categories that are currently intersecting
+        const activeCategories = Object.keys(intersectingMap).filter(
+          (cat) => intersectingMap[cat]
+        );
+
+        if (activeCategories.length > 0) {
+          // Select the category closest to the top area (about 154px offset)
+          let bestCat = activeCategories[0];
+          let minTop = Infinity;
+
+          activeCategories.forEach((cat) => {
+            const ref = categoryRefs.current[cat];
+            if (ref) {
+              const top = ref.getBoundingClientRect().top;
+              // We want the section that is closest to our sticky header offset (154px)
+              const dist = Math.abs(top - 154);
+              if (dist < minTop) {
+                minTop = dist;
+                bestCat = cat;
+              }
+            }
+          });
+
+          setActiveCategory(bestCat);
+        }
+      },
+      {
+        root: null, // viewport
+        threshold: [0, 0.05, 0.1, 0.2],
+        rootMargin: '-154px 0px -10% 0px', // check elements below the header/search offset
+      }
+    );
+
+    // Observe all category section elements
+    Object.values(categoryRefs.current).forEach((el) => {
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filteredApps]);
 
   const handleOpenWizard = () => {
     setWizardStep(1);
@@ -752,126 +842,126 @@ export default function AllProducts() {
           </div>
         </div>
 
-        {/* CONTROLS HEADER BAR */}
-        <div className="flex flex-col gap-3 sm:gap-4 mb-6 sm:mb-8 md:mb-10 pb-5 sm:pb-6 border-b border-neutral-200/50 dark:border-neutral-800">
-          {/* Top row: Search + View Toggle */}
-          <div className="flex items-center gap-3">
-            <div className="relative flex items-center flex-1">
-              <Search className="absolute left-3.5 text-neutral-400 dark:text-neutral-500" size={15} />
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search apps or features..."
-                className="w-full bg-white dark:bg-neutral-900/60 pl-10 pr-9 py-3 rounded-xl sm:rounded-2xl border border-neutral-200 dark:border-neutral-800 text-xs sm:text-[13px] text-neutral-800 dark:text-neutral-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 transition-all shadow-sm"
-              />
-              {search && (
-                <button
-                  onClick={() => setSearch('')}
-                  className="absolute right-3 w-6 h-6 rounded-full flex items-center justify-center hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors text-neutral-400 hover:text-neutral-600"
-                >
-                  <X size={12} />
+
+        {/* MAIN LAYOUT SPLIT — sticky dual-panel (exactly like Zoho) */}
+        <div className="flex flex-col lg:flex-row gap-8 items-start">
+
+          {/* ─── LEFT: Sticky category sidebar ─────────────────────── */}
+          <div className="hidden lg:flex flex-col w-56 xl:w-64 shrink-0 sticky top-24 max-h-[calc(100vh-120px)] overflow-y-auto border border-neutral-200/50 dark:border-neutral-800 rounded-2xl bg-white dark:bg-neutral-900/40 p-4 shadow-sm scrollbar-none">
+            {/* Sidebar header */}
+            <div className="px-1 pb-3 border-b border-neutral-200/40 dark:border-neutral-800/60">
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-neutral-400 dark:text-neutral-500">Featured Apps</p>
+            </div>
+
+            {/* Category nav */}
+            <div className="py-3">
+              {/* "Apps" group label */}
+              <div className="flex items-center gap-2 px-1 py-1.5 mb-1">
+                <span className="w-1 h-4 rounded-full bg-indigo-600 shrink-0" />
+                <span className="text-[12px] font-extrabold text-neutral-900 dark:text-white">Apps</span>
+              </div>
+
+              {categories.filter(c => c !== 'All').map((cat) => {
+                const isActive = activeCategory === cat;
+                return (
+                  <button
+                    key={cat}
+                    onClick={() => handleScrollToCategory(cat)}
+                    className={`group w-full flex items-center justify-between text-left px-3 py-2.5 rounded-xl transition-all duration-150 cursor-pointer ${
+                      isActive
+                        ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50/60 dark:bg-indigo-950/20 font-bold'
+                        : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200 hover:bg-neutral-50 dark:hover:bg-neutral-800/40'
+                    }`}
+                  >
+                    <span className="text-[13px] font-semibold leading-snug">{cat}</span>
+                    {isActive && (
+                      <ChevronRight size={14} className="text-indigo-500 shrink-0 ml-1 animate-pulse" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ─── Mobile: horizontal pill tabs (sticky below main header) ─── */}
+          <div className="lg:hidden w-full sticky top-14 sm:top-16 z-30 bg-neutral-50/95 dark:bg-neutral-950/95 backdrop-blur-md border-b border-neutral-200/50 dark:border-neutral-800 py-2 px-3 shadow-sm">
+            <div className="flex overflow-x-auto gap-2 scrollbar-none">
+              {categories.filter(c => c !== 'All').map((cat) => {
+                const isActive = activeCategory === cat;
+                return (
+                  <button
+                    key={cat}
+                    onClick={() => handleScrollToCategory(cat)}
+                    className={`shrink-0 px-3.5 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap cursor-pointer transition-all ${
+                      isActive
+                        ? 'bg-indigo-600 text-white shadow-sm'
+                        : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400'
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ─── RIGHT: Content panel (scrolls with window) ──────── */}
+          <div
+            ref={scrollPanelRef}
+            className="flex-1 w-full space-y-10"
+          >
+            {/* Search + controls row (sticky below main header) */}
+            <div className="sticky top-14 sm:top-16 md:top-20 z-20 bg-neutral-50/95 dark:bg-neutral-950/95 backdrop-blur-md py-3.5 border-b border-neutral-200/40 dark:border-neutral-800/60 flex items-center gap-3 mb-6">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" size={14} />
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search apps or features..."
+                  className="w-full bg-neutral-50 dark:bg-neutral-850 pl-9 pr-8 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 text-[12.5px] text-neutral-800 dark:text-neutral-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 transition-all"
+                />
+                {search && (
+                  <button onClick={() => setSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full flex items-center justify-center text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors">
+                    <X size={11} />
+                  </button>
+                )}
+              </div>
+              <div className="flex items-center gap-1 p-0.5 rounded-lg bg-neutral-100 dark:bg-neutral-800 border border-neutral-200/40 dark:border-neutral-700/60 shrink-0">
+                <button onClick={() => setViewMode('grid')} className={`w-7 h-7 rounded-md flex items-center justify-center transition-all cursor-pointer ${ viewMode === 'grid' ? 'bg-white dark:bg-neutral-700 text-indigo-600 shadow-sm' : 'text-neutral-400' }`} aria-label="Grid"><LayoutGrid size={13} /></button>
+                <button onClick={() => setViewMode('list')} className={`w-7 h-7 rounded-md flex items-center justify-center transition-all cursor-pointer ${ viewMode === 'list' ? 'bg-white dark:bg-neutral-700 text-indigo-600 shadow-sm' : 'text-neutral-400' }`} aria-label="List"><List size={13} /></button>
+              </div>
+              {highlightedApps.length > 0 && (
+                <button onClick={() => setHighlightedApps([])} className="text-[11px] font-bold text-rose-500 bg-rose-50 dark:bg-rose-950/20 px-2.5 py-1.5 rounded-lg border border-rose-200/20 cursor-pointer flex items-center gap-1 shrink-0">
+                  <X size={10} /><span className="hidden sm:inline">Clear</span>
                 </button>
               )}
             </div>
 
-            <div className="p-1 rounded-xl bg-neutral-100 dark:bg-neutral-900 flex items-center gap-0.5 border border-neutral-200/30 dark:border-neutral-800/80 shrink-0">
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
-                  viewMode === 'grid' ? 'bg-white dark:bg-neutral-800 text-indigo-600 dark:text-white shadow-sm' : 'text-neutral-400 hover:text-neutral-600'
-                }`}
-                aria-label="Grid View"
-              >
-                <LayoutGrid size={14} />
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
-                  viewMode === 'list' ? 'bg-white dark:bg-neutral-800 text-indigo-600 dark:text-white shadow-sm' : 'text-neutral-400 hover:text-neutral-600'
-                }`}
-                aria-label="List View"
-              >
-                <List size={14} />
-              </button>
-            </div>
-          </div>
+              {/* Category sections */}
+              {categories.filter(c => c !== 'All').map((catName) => {
+                  const catApps = filteredApps.filter(app => app.category === catName);
+                  if (catApps.length === 0) return null;
 
-          {/* Bottom row: Wizard reset badge */}
-          {highlightedApps.length > 0 && (
-            <div className="flex items-center">
-              <button
-                onClick={() => setHighlightedApps([])}
-                className="text-xs font-bold text-rose-500 hover:text-rose-600 bg-rose-50 hover:bg-rose-100/50 dark:bg-rose-950/20 px-3 py-1.5 rounded-xl border border-rose-200/10 transition-colors cursor-pointer flex items-center gap-1"
-              >
-                <X size={11} />
-                <span>Clear Wizard Filter</span>
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* MAIN LAYOUT SPLIT */}
-        <LayoutGroup>
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-start">
-            
-            {/* Category Navigation — horizontal scrollable pills on mobile, vertical sticky sidebar on desktop */}
-            <aside className="lg:col-span-3 lg:sticky lg:top-24 select-none">
-              <h4 className="text-[10px] font-extrabold uppercase tracking-widest text-neutral-400 dark:text-neutral-500 px-1 mb-2.5 hidden lg:block">
-                Filter Category
-              </h4>
-
-              {/* Mobile: pill scroller */}
-              <div className="flex flex-row lg:flex-col overflow-x-auto lg:overflow-x-visible gap-2 lg:gap-1.5 pb-1 lg:pb-0 scrollbar-none -mx-1 px-1">
-                {categories.map((cat) => {
-                  const isSelected = activeCategory === cat;
                   return (
-                    <button
-                      key={cat}
-                      onClick={() => handleScrollToCategory(cat)}
-                      className={`lg:w-full text-left shrink-0 cursor-pointer transition-all duration-200
-                        px-3.5 lg:px-4 py-2 lg:py-3 rounded-full lg:rounded-xl
-                        text-[11px] sm:text-[12px] lg:text-[13px] font-bold whitespace-nowrap
-                        ${
-                          isSelected
-                            ? 'text-white bg-indigo-600 lg:text-indigo-600 lg:bg-white lg:dark:bg-neutral-900 lg:dark:text-white shadow-sm lg:border lg:border-neutral-200/50 lg:dark:border-neutral-800'
-                            : 'text-neutral-500 bg-neutral-100 dark:bg-neutral-900/60 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200 lg:bg-transparent lg:dark:bg-transparent lg:hover:bg-neutral-100/60 lg:dark:hover:bg-neutral-900/30'
-                        }`}
+                    <div
+                      key={catName}
+                      ref={(el) => { categoryRefs.current[catName] = el; }}
+                      data-category={catName}
+                      className="space-y-5"
                     >
-                      {cat}
-                    </button>
-                  );
-                })}
-              </div>
-            </aside>
+                      {/* Category heading */}
+                      <div className="flex items-center justify-between pb-3 border-b border-neutral-200/40 dark:border-neutral-800/80">
+                        <h2 className="text-xl sm:text-2xl font-black text-neutral-900 dark:text-white tracking-tight">
+                          {catName}
+                        </h2>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800 text-neutral-500 border border-neutral-200/40 dark:border-neutral-700/60">
+                          {catApps.length} app{catApps.length !== 1 && 's'}
+                        </span>
+                      </div>
 
-            {/* Catalog Lists */}
-            <div className="lg:col-span-9 space-y-10 sm:space-y-14">
-              
-              {categories.filter(c => activeCategory === 'All' || c === activeCategory).map((catName) => {
-                if (catName === 'All') return null;
- 
-                const catApps = filteredApps.filter(app => app.category === catName);
-                if (catApps.length === 0) return null;
- 
-                return (
-                  <div
-                    key={catName}
-                    ref={(el) => { categoryRefs.current[catName] = el; }}
-                    className="space-y-6 scroll-mt-28"
-                  >
-                    {/* Category Section Header */}
-                    <div className="flex items-center justify-between border-b border-neutral-200/40 dark:border-neutral-800/80 pb-3">
-                      <h3 className="text-base sm:text-lg font-extrabold text-neutral-900 dark:text-white tracking-tight">
-                        {catName}
-                      </h3>
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-neutral-100 dark:bg-neutral-900 text-neutral-500">
-                        {catApps.length} Application{catApps.length !== 1 && 's'}
-                      </span>
-                    </div>
-
-                    {/* Layout switcher rendering */}
-                    <AnimatePresence mode="popLayout">
+                      {/* Layout switcher rendering */}
+                      <AnimatePresence mode="popLayout">
                       {viewMode === 'grid' ? (
                         // Bento Grid Mode
                         <motion.div
@@ -1059,21 +1149,29 @@ export default function AllProducts() {
                   </button>
                 </div>
               )}
-            </div>
-          </div>
-        </LayoutGroup>
+          </div>{/* end right content panel */}
+        </div>{/* end sticky split container */}
       </main>
 
-      {/* FLOAT INTERACTIVE FINDER BUTTON — hidden on mobile when dock is visible */}
-      <div className={`fixed bottom-6 right-4 sm:right-6 z-40 ${activeStack.length > 0 ? 'hidden sm:block' : ''}`}>
-        <button
-          onClick={handleOpenWizard}
-          className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center shadow-xl shadow-indigo-600/30 hover:scale-105 transition-all cursor-pointer animate-float"
-          aria-label="Open Interactive Product Finder Wizard"
-        >
-          <HelpCircle size={20} />
-        </button>
-      </div>
+      {/* FLOAT INTERACTIVE FINDER BUTTON — hidden on mobile when dock is visible, and hidden when footer is in view */}
+      <AnimatePresence>
+        {!isFooterVisible && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            className={`fixed bottom-6 right-4 sm:right-6 z-40 ${activeStack.length > 0 ? 'hidden sm:block' : ''}`}
+          >
+            <button
+              onClick={handleOpenWizard}
+              className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center shadow-xl shadow-indigo-600/30 hover:scale-105 transition-all cursor-pointer animate-float"
+              aria-label="Open Interactive Product Finder Wizard"
+            >
+              <HelpCircle size={20} />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* DYNAMIC FINDER MODAL DIALOG — bottom sheet on mobile, centered on desktop */}
       <AnimatePresence>
@@ -1194,9 +1292,9 @@ export default function AllProducts() {
         )}
       </AnimatePresence>
 
-      {/* WORKSPACE SUITE BUILDER DOCK — full-width on mobile, floating pill on desktop */}
+      {/* WORKSPACE SUITE BUILDER DOCK — full-width on mobile, floating pill on desktop — hides when footer is in view */}
       <AnimatePresence>
-        {activeStack.length > 0 && (
+        {activeStack.length > 0 && !isFooterVisible && (
           <motion.div
             initial={{ opacity: 0, y: 80 }}
             animate={{ opacity: 1, y: 0 }}
