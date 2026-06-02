@@ -649,14 +649,24 @@ export default function AllProducts() {
 
             <button
               onClick={toggleTheme}
-              className="w-10 h-10 rounded-xl flex items-center justify-center border border-neutral-200/50 dark:border-neutral-800/50 hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-colors cursor-pointer text-neutral-700 dark:text-neutral-300"
+              className="w-10 h-10 rounded-xl flex items-center justify-center border border-neutral-200/50 dark:border-neutral-800/50 hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-all cursor-pointer text-neutral-700 dark:text-neutral-300 relative overflow-hidden"
               aria-label="Toggle Theme"
             >
-              {theme === 'dark' ? (
-                <Sparkles size={16} className="text-yellow-500" />
-              ) : (
-                <Compass size={16} className="text-indigo-600" />
-              )}
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={theme}
+                  initial={{ opacity: 0, rotate: -90, scale: 0.8 }}
+                  animate={{ opacity: 1, rotate: 0, scale: 1 }}
+                  exit={{ opacity: 0, rotate: 90, scale: 0.8 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  {theme === 'dark' ? (
+                    <Sparkles size={16} className="text-yellow-550 fill-yellow-500/25 animate-pulse" />
+                  ) : (
+                    <Compass size={16} className="text-indigo-650" />
+                  )}
+                </motion.div>
+              </AnimatePresence>
             </button>
           </div>
         </div>
@@ -879,10 +889,12 @@ export default function AllProducts() {
                               animate={{ opacity: 1, scale: 1 }}
                               exit={{ opacity: 0, scale: 0.96 }}
                               transition={{ duration: 0.25 }}
-                              className={`group relative overflow-hidden rounded-3xl border bg-white dark:bg-neutral-900 p-6 flex flex-col justify-between hover:scale-102 hover:border-neutral-300 dark:hover:border-neutral-700 transition-all duration-300 select-none spotlight-card ${
-                                highlightedApps.includes(app.id)
-                                  ? 'border-indigo-500 ring-2 ring-indigo-500/20 shadow-lg shadow-indigo-500/10'
-                                  : 'border-neutral-200/60 dark:border-neutral-800'
+                              className={`group relative overflow-hidden rounded-3xl border bg-white dark:bg-neutral-900 p-6 flex flex-col justify-between hover:scale-[1.02] hover:border-neutral-300 dark:hover:border-neutral-700 transition-all duration-300 select-none spotlight-card ${
+                                activeStack.includes(app.id)
+                                  ? 'border-indigo-500 dark:border-indigo-550 ring-2 ring-indigo-500/10 shadow-lg shadow-indigo-500/5'
+                                  : highlightedApps.includes(app.id)
+                                    ? 'border-indigo-500 ring-2 ring-indigo-500/20 shadow-lg shadow-indigo-500/10'
+                                    : 'border-neutral-200/60 dark:border-neutral-800'
                               }`}
                               onMouseMove={handleCardMouseMove}
                             >
@@ -894,11 +906,27 @@ export default function AllProducts() {
                                     {React.cloneElement(app.icon as React.ReactElement<{ className?: string; size?: number }>, { className: 'text-white', size: 20 })}
                                   </div>
                                   
-                                  {app.popular && (
-                                    <span className="rgb-badge shrink-0">
-                                      Popular
-                                    </span>
-                                  )}
+                                  <div className="flex items-center gap-2">
+                                    {app.popular && (
+                                      <span className="rgb-badge shrink-0">
+                                        Popular
+                                      </span>
+                                    )}
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        toggleActiveStack(app.id);
+                                      }}
+                                      className={`w-7 h-7 rounded-lg flex items-center justify-center border transition-all cursor-pointer ${
+                                        activeStack.includes(app.id)
+                                          ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm'
+                                          : 'bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-805 text-neutral-400 hover:text-neutral-700 dark:hover:text-white'
+                                      }`}
+                                      title={activeStack.includes(app.id) ? "Remove Node" : "Add Node"}
+                                    >
+                                      {activeStack.includes(app.id) ? <Check size={13} /> : <Plus size={13} />}
+                                    </button>
+                                  </div>
                                 </div>
 
                                 <h4 className="text-[17px] sm:text-[19px] font-extrabold tracking-tight text-neutral-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 flex items-center gap-1 transition-colors duration-200">
@@ -915,8 +943,18 @@ export default function AllProducts() {
                                 </p>
                               </div>
 
-                              <div className="mt-5 pt-3 border-t border-neutral-100 dark:border-neutral-800/80 w-full flex items-center justify-between text-[11px] text-neutral-400 font-semibold group-hover:text-neutral-800 dark:group-hover:text-white transition-colors">
-                                <span>Configure Node</span>
+                              <div 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedAppForConsole(app);
+                                  setIsConsoleOpen(true);
+                                }}
+                                className="mt-5 pt-3 border-t border-neutral-100 dark:border-neutral-800/80 w-full flex items-center justify-between text-[11px] text-neutral-450 hover:text-indigo-600 dark:hover:text-indigo-400 font-bold transition-colors cursor-pointer"
+                              >
+                                <span className="flex items-center gap-1">
+                                  <Terminal size={12} className="text-neutral-400" />
+                                  <span>Launch Telemetry Console</span>
+                                </span>
                                 <span className="text-neutral-300 dark:text-neutral-700">→</span>
                               </div>
                             </motion.div>
@@ -936,9 +974,11 @@ export default function AllProducts() {
                               animate={{ opacity: 1, y: 0 }}
                               exit={{ opacity: 0, y: 10 }}
                               className={`group w-full px-5 py-4 rounded-2.5xl border bg-white dark:bg-neutral-900 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:border-neutral-300 dark:hover:border-neutral-700 transition-all select-none hover:shadow-sm spotlight-card ${
-                                highlightedApps.includes(app.id)
-                                  ? 'border-indigo-500 ring-1 ring-indigo-500/20'
-                                  : 'border-neutral-200/50 dark:border-neutral-800'
+                                activeStack.includes(app.id)
+                                  ? 'border-indigo-500 dark:border-indigo-550 ring-1 ring-indigo-500/10'
+                                  : highlightedApps.includes(app.id)
+                                    ? 'border-indigo-500 ring-1 ring-indigo-500/20'
+                                    : 'border-neutral-200/50 dark:border-neutral-800'
                               }`}
                               onMouseMove={handleCardMouseMove}
                             >
@@ -955,7 +995,7 @@ export default function AllProducts() {
                                       </span>
                                     )}
                                   </h4>
-                                  <span className="text-xs sm:text-[13px] text-neutral-500 dark:text-neutral-400 font-medium mt-0.5 block leading-tight">
+                                  <span className="text-xs sm:text-[13px] text-neutral-500 dark:text-neutral-405 font-medium mt-0.5 block leading-tight">
                                     {app.tagline}
                                   </span>
                                 </div>
@@ -965,12 +1005,41 @@ export default function AllProducts() {
                                 {app.desc}
                               </div>
 
-                              <div className="flex items-center gap-3 shrink-0 self-end sm:self-auto">
+                              <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
                                 <button
-                                  onClick={() => handlePlanSelect(app.name)}
-                                  className={`text-[10px] font-bold uppercase tracking-wider px-3.5 py-1.5 rounded-lg border transition-colors cursor-pointer ${accentClasses[app.accent]?.bg} ${accentClasses[app.accent]?.text}`}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedAppForConsole(app);
+                                    setIsConsoleOpen(true);
+                                  }}
+                                  className="text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-550 dark:text-neutral-400 transition-colors cursor-pointer flex items-center gap-1"
                                 >
-                                  Deploy Node
+                                  <Terminal size={11} />
+                                  <span>Console</span>
+                                </button>
+                                
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleActiveStack(app.id);
+                                  }}
+                                  className={`text-[10px] font-bold uppercase tracking-wider px-3.5 py-1.5 rounded-lg border transition-all cursor-pointer flex items-center gap-1 ${
+                                    activeStack.includes(app.id)
+                                      ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm'
+                                      : `${accentClasses[app.accent]?.bg} ${accentClasses[app.accent]?.text}`
+                                  }`}
+                                >
+                                  {activeStack.includes(app.id) ? (
+                                    <>
+                                      <Check size={11} />
+                                      <span>Active</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Plus size={11} />
+                                      <span>Add Node</span>
+                                    </>
+                                  )}
                                 </button>
                               </div>
                             </motion.div>
@@ -1128,6 +1197,383 @@ export default function AllProducts() {
         )}
       </AnimatePresence>
 
+      {/* WORKSPACE SUITE BUILDER DOCK */}
+      <AnimatePresence>
+        {activeStack.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 100 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 100 }}
+            transition={{ type: 'spring', damping: 20, stiffness: 100 }}
+            className="fixed bottom-6 left-6 right-6 md:left-auto md:right-1/2 md:translate-x-1/2 md:w-[600px] z-40 glassmorphism rounded-3xl px-5 py-4 shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-4 border border-neutral-200/50 dark:border-neutral-800"
+          >
+            {/* Active Icons Dock */}
+            <div className="flex items-center gap-3 overflow-x-auto max-w-full pb-1 sm:pb-0 scrollbar-none">
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] font-extrabold uppercase tracking-widest text-neutral-400 dark:text-neutral-500 mr-2 shrink-0">
+                  Active Suite
+                </span>
+                {activeStack.map((id) => {
+                  const matched = applications.find(a => a.id === id);
+                  if (!matched) return null;
+                  return (
+                    <button
+                      key={id}
+                      onClick={() => toggleActiveStack(id)}
+                      className={`w-8 h-8 rounded-lg flex items-center justify-center text-white cursor-pointer hover:scale-110 transition-transform ${iconGradientClasses[matched.accent] || 'bg-indigo-600'}`}
+                      title={`Remove ${matched.name} from stack`}
+                    >
+                      {React.cloneElement(matched.icon as React.ReactElement<{ className?: string; size?: number }>, { className: 'text-white', size: 15 })}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Calculator & Integrator Actions */}
+            <div className="flex items-center gap-4 shrink-0 justify-between w-full sm:w-auto border-t sm:border-t-0 pt-3 sm:pt-0 border-neutral-200/20">
+              <div className="text-left">
+                <div className="text-[12px] font-extrabold text-neutral-900 dark:text-white leading-none">
+                  ${pricingSummary.totalCost} <span className="text-[10px] font-medium text-neutral-400">/ mo</span>
+                </div>
+                <div className="text-[9px] font-semibold text-indigo-600 dark:text-indigo-400 mt-0.5">
+                  {pricingSummary.discountPct > 0 ? `${pricingSummary.discountPct}% Discount Applied` : 'Standard Pricing'}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setIsFlowOpen(true)}
+                  className="px-3.5 py-2 text-[11px] font-extrabold text-neutral-750 hover:text-neutral-950 dark:text-neutral-300 dark:hover:text-white bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 rounded-xl transition-all cursor-pointer flex items-center gap-1"
+                  title="Visualize Suite Integration Flow"
+                >
+                  <Compass size={13} className="text-indigo-500" />
+                  <span>Integrate</span>
+                </button>
+
+                <button
+                  onClick={handleExportConfig}
+                  className="px-3.5 py-2 text-[11px] font-extrabold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md shadow-indigo-600/10 hover:scale-[1.02] transition-all cursor-pointer flex items-center gap-1"
+                  title="Copy Workspace Config JSON"
+                >
+                  <Download size={13} />
+                  <span>Export Config</span>
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* PLAYGROUND CONSOLE DRAWER */}
+      <AnimatePresence>
+        {isConsoleOpen && selectedAppForConsole && (
+          <div className="fixed inset-0 z-50 overflow-hidden flex justify-end">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsConsoleOpen(false)}
+              className="absolute inset-0 bg-neutral-950/60 backdrop-blur-sm"
+            />
+
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 220 }}
+              className="relative w-full max-w-lg h-full bg-white dark:bg-neutral-950 border-l border-neutral-200 dark:border-neutral-900 shadow-2xl z-10 flex flex-col"
+            >
+              {/* Header */}
+              <div className="p-6 border-b border-neutral-200/50 dark:border-neutral-900 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-white ${iconGradientClasses[selectedAppForConsole.accent] || 'bg-neutral-100'}`}>
+                    {React.cloneElement(selectedAppForConsole.icon as React.ReactElement<{ className?: string; size?: number }>, { className: 'text-white', size: 18 })}
+                  </div>
+                  <div>
+                    <h3 className="text-[16px] font-black text-neutral-900 dark:text-white tracking-tight flex items-center gap-1.5">
+                      <span>{selectedAppForConsole.name}</span>
+                      <span className="text-[9px] uppercase font-mono px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 border border-indigo-200/10">
+                        Active Node
+                      </span>
+                    </h3>
+                    <p className="text-[11px] text-neutral-450 font-medium leading-none mt-1">
+                      Telemetry & deployment console
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setIsConsoleOpen(false)}
+                  className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-colors text-neutral-450 hover:text-neutral-750 cursor-pointer"
+                >
+                  <X size={15} />
+                </button>
+              </div>
+
+              {/* Content area: dashboard toggles + live log */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                {/* Description Card */}
+                <div className="bg-neutral-55 dark:bg-neutral-900/40 border border-neutral-200/50 dark:border-neutral-900 p-4 rounded-2xl">
+                  <h4 className="text-[11px] font-extrabold text-neutral-400 dark:text-neutral-500 uppercase tracking-widest mb-1.5">
+                    Operational Purpose
+                  </h4>
+                  <p className="text-[12.5px] text-neutral-500 dark:text-neutral-400 leading-relaxed font-normal">
+                    {selectedAppForConsole.desc}
+                  </p>
+                </div>
+
+                {/* Mock Controls Section */}
+                <div className="space-y-3">
+                  <h4 className="text-[11px] font-extrabold text-neutral-400 dark:text-neutral-500 uppercase tracking-widest">
+                    Simulated Control Dashboard
+                  </h4>
+                  <div className="grid grid-cols-1 gap-2.5">
+                    <ConsoleToggleRow 
+                      label="Auto-Scale Resource Daemon" 
+                      desc="Dynamically partition cloud cores on peak read loads" 
+                      active={consoleToggles.autoScale}
+                      onToggle={() => handleToggleConsoleOption('autoScale', 'Auto-Scale Mode')}
+                    />
+                    <ConsoleToggleRow 
+                      label="High-Frequency Diff Sync" 
+                      desc="Reduce differential database synchronization bounds to 5s" 
+                      active={consoleToggles.highFreqSync}
+                      onToggle={() => handleToggleConsoleOption('highFreqSync', 'High-Frequency Sync')}
+                    />
+                    <ConsoleToggleRow 
+                      label="Developer Sandbox Bypass" 
+                      desc="Allow zero-auth SQL querying direct inside telemetry consoles" 
+                      active={consoleToggles.devBypass}
+                      onToggle={() => handleToggleConsoleOption('devBypass', 'Dev Sandbox Bypass')}
+                    />
+                  </div>
+                </div>
+
+                {/* Live Terminal Log screen */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-[11px] font-extrabold text-neutral-400 dark:text-neutral-500 uppercase tracking-widest">
+                      Telemetry Logs Console
+                    </h4>
+                    <button 
+                      onClick={() => setConsoleLogs([])}
+                      className="text-[9px] font-bold text-indigo-500 hover:text-indigo-650 font-mono tracking-wider uppercase bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200/10 px-2 py-1 rounded cursor-pointer"
+                    >
+                      Clear Buffer
+                    </button>
+                  </div>
+
+                  <div className="bg-neutral-950 text-neutral-100 rounded-2xl border border-neutral-900/80 p-4 font-mono text-[11px] sm:text-xs h-72 overflow-y-auto space-y-1.5 scrollbar-thin select-text">
+                    {consoleLogs.map((log, idx) => (
+                      <div key={idx} className="flex items-start gap-2.5 leading-snug">
+                        <span className="text-neutral-500 select-none">{log.time}</span>
+                        <span className={
+                          log.type === 'success' ? 'text-emerald-450' :
+                          log.type === 'warn' ? 'text-amber-450' :
+                          log.type === 'error' ? 'text-rose-450' : 'text-neutral-300'
+                        }>
+                          {log.text}
+                        </span>
+                      </div>
+                    ))}
+                    {consoleLogs.length === 0 && (
+                      <div className="text-neutral-600 italic select-none h-full flex items-center justify-center">
+                        Buffer empty. Awaiting daemon sync events...
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Drawer Actions Footer */}
+              <div className="p-6 border-t border-neutral-200/50 dark:border-neutral-900 flex items-center justify-between gap-3">
+                <button
+                  onClick={() => {
+                    toggleActiveStack(selectedAppForConsole.id);
+                  }}
+                  className={`flex-1 py-3 rounded-xl font-extrabold text-[12px] uppercase tracking-wide transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5 ${
+                    activeStack.includes(selectedAppForConsole.id)
+                      ? 'bg-rose-50 hover:bg-rose-100 text-rose-500 dark:bg-rose-950/20 dark:hover:bg-rose-950/30'
+                      : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-md'
+                  }`}
+                >
+                  {activeStack.includes(selectedAppForConsole.id) ? (
+                    <>
+                      <Trash2 size={13} />
+                      <span>Decommission Node</span>
+                    </>
+                  ) : (
+                    <>
+                      <Plus size={13} />
+                      <span>Bind Node to Stack</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* INTEGRATION FLOW MAPPING OVERLAY MODAL */}
+      <AnimatePresence>
+        {isFlowOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center px-6">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsFlowOpen(false)}
+              className="absolute inset-0 bg-neutral-950/70 backdrop-blur-sm"
+            />
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-3xl p-6 sm:p-8 shadow-2xl z-10 flex flex-col max-h-[90vh]"
+            >
+              <button
+                onClick={() => setIsFlowOpen(false)}
+                className="absolute top-5 right-5 w-8 h-8 rounded-full flex items-center justify-center hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors text-neutral-400 hover:text-neutral-705 cursor-pointer"
+              >
+                <X size={15} />
+              </button>
+
+              <div className="mb-6 select-none">
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200/20 text-indigo-600 dark:text-indigo-400 text-[10px] font-bold tracking-wider uppercase">
+                  <Compass size={12} className="animate-spin" style={{ animationDuration: '6s' }} />
+                  <span>Spatial Integration Map</span>
+                </span>
+                <h3 className="text-[17px] sm:text-[19px] font-black text-neutral-900 dark:text-white tracking-tight mt-1.5">
+                  Active Suite Core Router Routing Map
+                </h3>
+                <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                  Visualizes how data telemetry routes between active integration hosts and the core relay.
+                </p>
+              </div>
+
+              {/* Central SVG Mesh Visualizer */}
+              <div className="flex-1 border border-neutral-200/30 dark:border-neutral-800 rounded-3xl p-6 bg-neutral-50 dark:bg-neutral-950 min-h-[300px] flex items-center justify-center relative overflow-hidden">
+                <div className="absolute inset-0 bg-grid-pattern opacity-30" />
+
+                {/* Central router node */}
+                <div className="relative z-10 w-16 h-16 rounded-full bg-gradient-to-br from-indigo-500 to-purple-650 shadow-lg shadow-indigo-500/25 flex items-center justify-center text-white border-2 border-white dark:border-neutral-900 animate-pulse">
+                  <Cpu size={24} />
+                </div>
+
+                {/* Satellite Nodes mapping */}
+                {activeStack.map((id, index) => {
+                  const matched = applications.find(a => a.id === id);
+                  if (!matched) return null;
+                  
+                  const total = activeStack.length;
+                  const angle = (index * 2 * Math.PI) / total;
+                  const radius = 100; // pixels out
+                  const x = radius * Math.cos(angle);
+                  const y = radius * Math.sin(angle);
+
+                  return (
+                    <React.Fragment key={id}>
+                      {/* Connection SVG Line */}
+                      <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 5 }}>
+                        <line
+                          x1="50%"
+                          y1="50%"
+                          x2={`calc(50% + ${x}px)`}
+                          y2={`calc(50% + ${y}px)`}
+                          className="stroke-indigo-500/40 dark:stroke-indigo-500/20 animate-dash"
+                          strokeWidth="2"
+                        />
+                      </svg>
+
+                      {/* Satellite Badge */}
+                      <div
+                        className="absolute z-10 flex flex-col items-center gap-1"
+                        style={{
+                          transform: `translate(${x}px, ${y}px)`,
+                          transition: 'all 0.3s ease'
+                        }}
+                      >
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-md ${iconGradientClasses[matched.accent] || 'bg-indigo-650'}`}>
+                          {React.cloneElement(matched.icon as React.ReactElement<{ className?: string; size?: number }>, { className: 'text-white', size: 18 })}
+                        </div>
+                        <span className="text-[10px] font-extrabold text-neutral-800 dark:text-neutral-300 bg-white dark:bg-neutral-900 px-2 py-0.5 rounded-md shadow-sm border border-neutral-200/50 dark:border-neutral-800 leading-none">
+                          {matched.name.split(' ').pop()}
+                        </span>
+                      </div>
+                    </React.Fragment>
+                  );
+                })}
+              </div>
+
+              <div className="mt-6 flex justify-end">
+                <button
+                  onClick={() => setIsFlowOpen(false)}
+                  className="px-5 py-2.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl cursor-pointer shadow-sm transition-all"
+                >
+                  Close Map
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* TOAST ALERTS */}
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 50, scale: 0.95 }}
+            className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl bg-neutral-900 text-white text-xs font-semibold shadow-lg shadow-black/20 flex items-center gap-2 border border-neutral-800"
+          >
+            <Check size={14} className="text-emerald-500" />
+            <span>{toastMessage}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+    </div>
+  );
+}
+
+function ConsoleToggleRow({ 
+  label, 
+  desc, 
+  active, 
+  onToggle 
+}: { 
+  label: string; 
+  desc: string; 
+  active: boolean; 
+  onToggle: () => void;
+}) {
+  return (
+    <div className="flex items-center justify-between p-3.5 bg-neutral-50 dark:bg-neutral-900/60 border border-neutral-200/40 dark:border-neutral-800/80 rounded-2xl transition-all">
+      <div className="pr-4">
+        <h5 className="text-[12.5px] font-extrabold text-neutral-800 dark:text-neutral-200 leading-none">
+          {label}
+        </h5>
+        <p className="text-[10px] text-neutral-400 dark:text-neutral-500 mt-1 leading-snug font-medium">
+          {desc}
+        </p>
+      </div>
+
+      <button
+        onClick={onToggle}
+        className={`w-9 h-5 rounded-full relative transition-colors cursor-pointer shrink-0 ${
+          active ? 'bg-indigo-600' : 'bg-neutral-200 dark:bg-neutral-800'
+        }`}
+      >
+        <span 
+          className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${
+            active ? 'translate-x-4' : 'translate-x-0'
+          }`}
+        />
+      </button>
     </div>
   );
 }
