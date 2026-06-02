@@ -6,7 +6,8 @@ import {
   Search, LayoutGrid, List, Compass, HelpCircle, X, ArrowRight, Check, ExternalLink, 
   Terminal, Shield, Keyboard, Zap, GitBranch, Layers, Lock, Sliders, Cpu, Sparkles, 
   Activity, DollarSign, Calendar, MessageSquare, Briefcase, FileText, ShoppingCart, 
-  Database, UserCheck, HardDrive, Mail, Eye, Info, Volume2, ArrowUpRight
+  Database, UserCheck, HardDrive, Mail, Eye, Info, Volume2, ArrowUpRight,
+  Plus, Trash2, Settings, Play, Pause, RefreshCw, SlidersHorizontal, Download, Code, Copy
 } from 'lucide-react';
 import { useTheme } from '@/components/ThemeContext';
 import confetti from 'canvas-confetti';
@@ -25,7 +26,7 @@ interface AppItem {
 export default function AllProducts() {
   const { theme, toggleTheme } = useTheme();
   
-  // States
+  // Standard States
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -34,6 +35,136 @@ export default function AllProducts() {
   const [wizardAnswers, setWizardAnswers] = useState<Record<string, string>>({});
   const [wizardRecommended, setWizardRecommended] = useState<string[]>([]);
   const [highlightedApps, setHighlightedApps] = useState<string[]>([]);
+
+  // Workspace Suite states & Console states
+  const [activeStack, setActiveStack] = useState<string[]>(['crm', 'books', 'mail']);
+  const [selectedAppForConsole, setSelectedAppForConsole] = useState<AppItem | null>(null);
+  const [isConsoleOpen, setIsConsoleOpen] = useState(false);
+  const [consoleLogs, setConsoleLogs] = useState<{ text: string; type: 'info' | 'success' | 'warn' | 'error' | 'input'; time: string }[]>([]);
+  const [consoleToggles, setConsoleToggles] = useState({ autoScale: false, highFreqSync: false, devBypass: false });
+  const [isFlowOpen, setIsFlowOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  const toggleActiveStack = (appId: string) => {
+    setActiveStack((prev) => {
+      const exists = prev.includes(appId);
+      if (exists) {
+        showToast("Removed from Active Stack");
+        return prev.filter((id) => id !== appId);
+      } else {
+        showToast("Added to Active Stack!");
+        confetti({
+          particleCount: 40,
+          spread: 40,
+          colors: ['#6366f1', '#10b981'],
+          origin: { y: 0.8 }
+        });
+        return [...prev, appId];
+      }
+    });
+  };
+
+  // Simulated Console booting effect
+  useEffect(() => {
+    if (!selectedAppForConsole) return;
+
+    const bootSequence = [
+      { text: `[SYSTEM] Booting integration node for ${selectedAppForConsole.name}...`, type: 'info' as const },
+      { text: `[LOADER] Parsing localized telemetry policies...`, type: 'info' as const },
+      { text: `[DATABASE] Syncing peer differential CRDT stores...`, type: 'info' as const },
+      { text: `[NETWORK] Handshake successful. Routing queries through Aether Relay.`, type: 'success' as const },
+      { text: `[STATUS] ${selectedAppForConsole.name.toUpperCase()} daemon listening on port 8080.`, type: 'success' as const }
+    ];
+
+    setConsoleLogs([]);
+    setConsoleToggles({ autoScale: false, highFreqSync: false, devBypass: false });
+
+    let timer: NodeJS.Timeout;
+    let index = 0;
+
+    const addNextLog = () => {
+      if (index < bootSequence.length) {
+        const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        setConsoleLogs((prev) => [...prev, { ...bootSequence[index], time: timeStr }]);
+        index++;
+        timer = setTimeout(addNextLog, 300);
+      }
+    };
+
+    timer = setTimeout(addNextLog, 100);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [selectedAppForConsole]);
+
+  const handleToggleConsoleOption = (key: 'autoScale' | 'highFreqSync' | 'devBypass', label: string) => {
+    const nextVal = !consoleToggles[key];
+    setConsoleToggles((prev) => ({ ...prev, [key]: nextVal }));
+
+    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const logText = nextVal 
+      ? `[USER-ACTION] Enabled ${label}. Spawning worker thread...`
+      : `[USER-ACTION] Disabled ${label}. Terminating background processes...`;
+
+    setConsoleLogs((prev) => [...prev, { text: logText, type: 'info', time: timeStr }]);
+
+    setTimeout(() => {
+      const successText = nextVal
+        ? `[SYSTEM] ${label} telemetry synced successfully.`
+        : `[SYSTEM] ${label} thread destroyed. Memory buffer reclaimed.`;
+      setConsoleLogs((prev) => [...prev, { text: successText, type: 'success', time: timeStr }]);
+    }, 550);
+  };
+
+  // Pricing math calculations memoized
+  const pricingSummary = useMemo(() => {
+    const count = activeStack.length;
+    const pricePerApp = 9;
+    const baseCost = count * pricePerApp;
+
+    let discountPct = 0;
+    if (count >= 5) discountPct = 30;
+    else if (count >= 3) discountPct = 20;
+
+    const discountAmount = (baseCost * discountPct) / 100;
+    const totalCost = baseCost - discountAmount;
+
+    return {
+      count,
+      baseCost,
+      discountPct,
+      discountAmount,
+      totalCost: totalCost.toFixed(2),
+    };
+  }, [activeStack]);
+
+  const handleExportConfig = () => {
+    const config = {
+      aether_suite: activeStack,
+      timestamp: new Date().toISOString(),
+      region: "us-east-1",
+      sync_mode: "differential-crdt",
+      licensing: activeStack.length >= 4 ? "Aether One Pack" : "Standard Node Pack",
+      meta: {
+        total_nodes: activeStack.length,
+        estimated_billing: `$${pricingSummary.totalCost}/mo`
+      }
+    };
+    navigator.clipboard.writeText(JSON.stringify(config, null, 2));
+    showToast("Suite configuration copied to clipboard!");
+    confetti({
+      particleCount: 50,
+      spread: 30,
+      origin: { y: 0.85 },
+      colors: ['#6366f1', '#10b981']
+    });
+  };
 
   // Category Refs
   const categoryRefs = useRef<Record<string, HTMLDivElement | null>>({});
