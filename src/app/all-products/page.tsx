@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import { 
   Search, LayoutGrid, List, Compass, HelpCircle, X, ArrowRight, Check, ExternalLink, 
@@ -28,6 +28,49 @@ interface AppItem {
   popular: boolean;
   icon: React.ReactNode;
 }
+
+/* ── Viewport Fade-Up Observer Hook ──────────────────────── */
+function useFadeUpObserver(trigger: any) {
+  useEffect(() => {
+    const els = document.querySelectorAll('.fade-up');
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible');
+          }
+        });
+      },
+      { threshold: 0.08, rootMargin: '0px 0px -30px 0px' }
+    );
+    els.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, [trigger]);
+}
+
+interface FloatingBubble {
+  id: number;
+  top: string;
+  left?: string;
+  right?: string;
+  size: number;
+  color: string;
+  duration: number;
+  delay?: number;
+}
+
+const backgroundBubbles: FloatingBubble[] = [
+  { id: 1, top: '2%', left: '-15%', size: 600, color: 'indigo', duration: 24 },
+  { id: 2, top: '12%', right: '-18%', size: 650, color: 'emerald', duration: 32, delay: 1 },
+  { id: 3, top: '24%', left: '-20%', size: 550, color: 'rose', duration: 28, delay: 2 },
+  { id: 4, top: '36%', right: '-16%', size: 620, color: 'amber', duration: 30, delay: 0.5 },
+  { id: 5, top: '48%', left: '-18%', size: 580, color: 'cyan', duration: 27, delay: 1.5 },
+  { id: 6, top: '60%', right: '-20%', size: 680, color: 'fuchsia', duration: 34, delay: 2.5 },
+  { id: 7, top: '72%', left: '-15%', size: 600, color: 'teal', duration: 29, delay: 0.8 },
+  { id: 8, top: '82%', right: '-18%', size: 700, color: 'violet', duration: 33, delay: 1.2 },
+  { id: 9, top: '92%', left: '-18%', size: 560, color: 'rose', duration: 31, delay: 2.2 },
+  { id: 10, top: '97%', right: '-15%', size: 640, color: 'indigo', duration: 36, delay: 1.8 },
+];
 
 export default function AllProducts() {
   const { theme, toggleTheme } = useTheme();
@@ -556,15 +599,15 @@ export default function AllProducts() {
         app.tagline.toLowerCase().includes(search.toLowerCase()) ||
         app.desc.toLowerCase().includes(search.toLowerCase());
       
-      const matchesCategory =
-        activeCategory === 'All' || app.category === activeCategory;
-
       const matchesHighlight =
         highlightedApps.length === 0 || highlightedApps.includes(app.id);
 
-      return matchesSearch && matchesCategory && matchesHighlight;
+      return matchesSearch && matchesHighlight;
     });
-  }, [search, activeCategory, highlightedApps, applications]);
+  }, [search, highlightedApps, applications]);
+
+  // Bind fade-up observer to the filtered list changes
+  useFadeUpObserver(filteredApps);
 
   // Smooth scroll
   // Smooth scroll
@@ -715,62 +758,95 @@ export default function AllProducts() {
   };
 
   return (
-    <div className="relative min-h-screen bg-neutral-50 dark:bg-neutral-950 transition-colors duration-300">
+    <div className="relative min-h-screen bg-[var(--background)] transition-colors duration-300">
       
       {/* Mesh backdrops */}
-      <div className="absolute inset-0 bg-radial-gradient pointer-events-none" />
-      <div className="absolute inset-0 bg-grid-pattern opacity-60 pointer-events-none" />
+      <div className="fixed inset-0 bg-radial-gradient pointer-events-none" />
 
-      {/* HEADER SECTION */}
-      <header className="sticky top-0 z-40 backdrop-blur-md bg-white/80 dark:bg-neutral-950/80 border-b border-neutral-200/40 dark:border-neutral-800/40 shadow-sm transition-colors duration-300">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 sm:h-16 md:h-20 flex items-center justify-between gap-3">
+      {/* Background floating bubbles */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+        {backgroundBubbles.map((bubble) => (
+          <motion.div
+            key={bubble.id}
+            animate={{
+              x: [0, bubble.id % 2 === 0 ? 25 : -25, bubble.id % 2 === 0 ? -12 : 12, 0],
+              y: [0, bubble.id % 3 === 0 ? -25 : 25, bubble.id % 3 === 0 ? 12 : -12, 0],
+              scale: [1, 1.05, 0.97, 1],
+              opacity: [0.75, 0.9, 0.8, 0.75],
+            }}
+            transition={{
+              duration: bubble.duration,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: bubble.delay || 0,
+            }}
+            className="absolute rounded-full"
+            style={{
+              top: bubble.top,
+              left: bubble.left,
+              right: bubble.right,
+              width: bubble.size,
+              height: bubble.size,
+              background: `var(--bubble-${bubble.color})`,
+              filter: 'blur(65px)',
+              willChange: 'transform, opacity',
+            }}
+          />
+        ))}
+      </div>
+
+      {/* ── HEADER ─────────────────────────────────────────────── */}
+      <header className="site-header sticky top-0 z-40 transition-colors duration-300">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-3">
           <a href="/" className="flex items-center gap-2 sm:gap-2.5 group shrink-0">
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-indigo-600 flex items-center justify-center shadow-md">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center shadow-md group-hover:scale-105 transition-transform duration-200" style={{ background: 'linear-gradient(135deg,#6366f1,#7c3aed)', boxShadow: '0 4px 12px rgba(99,102,241,0.35)' }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
                 <path d="M12 2L2 22h20L12 2zm0 4.5l6.5 12h-13L12 6.5z" fill="white" />
               </svg>
             </div>
-            <span className="font-bold text-base sm:text-xl tracking-tight text-neutral-900 dark:text-white">Aether Hub</span>
+            <span className="font-extrabold text-[17px] sm:text-[19px] tracking-tight text-neutral-900 dark:text-white">Aether Hub</span>
           </a>
 
-          <div className="flex items-center gap-2 sm:gap-4">
-            {/* Active stack count badge — mobile shortcut */}
+          <div className="flex items-center gap-2 sm:gap-2.5">
             {activeStack.length > 0 && (
-              <button
+              <motion.button
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
                 onClick={() => setIsFlowOpen(true)}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 sm:hidden rounded-xl bg-indigo-600 text-white text-[11px] font-bold shadow-md cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 sm:hidden rounded-xl text-white text-[11px] font-bold cursor-pointer"
+                style={{ background: 'linear-gradient(135deg,#6366f1,#7c3aed)', boxShadow: '0 3px 10px rgba(99,102,241,0.35)' }}
               >
                 <Layers size={12} />
                 <span>{activeStack.length} Active</span>
-              </button>
+              </motion.button>
             )}
 
             <button
               onClick={handleOpenWizard}
-              className="px-3 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-[14px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-200/20 hover:bg-indigo-100/50 dark:bg-indigo-950/30 dark:border-indigo-900/30 dark:text-indigo-400 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+              className="flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-[13px] font-bold text-indigo-600 dark:text-indigo-400 rounded-xl cursor-pointer transition-colors duration-200 hover:text-indigo-700 dark:hover:text-indigo-300"
+              style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.18)' }}
             >
-              <HelpCircle size={14} className="animate-pulse" />
+              <HelpCircle size={14} className="animate-micro-bounce" />
               <span className="hidden sm:inline">Product Finder</span>
             </button>
 
             <button
               onClick={toggleTheme}
-              className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center border border-neutral-200/50 dark:border-neutral-800/50 hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-all cursor-pointer text-neutral-700 dark:text-neutral-300 relative overflow-hidden"
-              aria-label="Toggle Theme"
+              className="w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer transition-all duration-200 text-neutral-600 dark:text-neutral-300 hover:scale-110"
+              style={{ background: theme === 'dark' ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)', border: theme === 'dark' ? '1px solid rgba(255,255,255,0.09)' : '1px solid rgba(0,0,0,0.08)' }}
+              aria-label="Toggle theme"
             >
               <AnimatePresence mode="wait">
                 <motion.div
                   key={theme}
-                  initial={{ opacity: 0, rotate: -90, scale: 0.8 }}
+                  initial={{ opacity: 0, rotate: -90, scale: 0.7 }}
                   animate={{ opacity: 1, rotate: 0, scale: 1 }}
-                  exit={{ opacity: 0, rotate: 90, scale: 0.8 }}
+                  exit={{ opacity: 0, rotate: 90, scale: 0.7 }}
                   transition={{ duration: 0.15 }}
                 >
-                  {theme === 'dark' ? (
-                    <Sparkles size={15} className="text-yellow-500" />
-                  ) : (
-                    <PiCompassDuotone size={18} className="text-indigo-600" />
-                  )}
+                  {theme === 'dark'
+                    ? <Sparkles size={16} className="text-amber-400" />
+                    : <PiCompassDuotone size={18} className="text-indigo-600" />}
                 </motion.div>
               </AnimatePresence>
             </button>
@@ -778,48 +854,75 @@ export default function AllProducts() {
         </div>
       </header>
 
-      {/* BODY CONTENT GRID */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10 md:py-12 relative z-10">
+      {/* ── MAIN ─────────────────────────────────────────────── */}
+      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-7 sm:py-10">
         
-        {/* SPOTLIGHT HERO ECOSYSTEM BANNER */}
-        <div className="w-full rounded-2xl sm:rounded-3xl border border-neutral-200/60 dark:border-neutral-800 bg-white dark:bg-neutral-900/60 p-5 sm:p-8 lg:p-10 mb-8 sm:mb-12 md:mb-16 relative overflow-hidden shadow-sm">
-          <div className="absolute top-[40%] right-[10%] w-80 h-80 rounded-full bg-indigo-500/5 blur-[120px] pointer-events-none" />
+        {/* HERO BANNER */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+          className="hero-banner p-6 sm:p-9 lg:p-10 mb-9 sm:mb-12">
+          {/* Ambient orbs */}
+          <div className="absolute top-[20%] right-[6%] w-80 h-80 rounded-full pointer-events-none animate-orb" style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.1) 0%, transparent 70%)' }} />
+          <div className="absolute bottom-0 left-[15%] w-64 h-64 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.07) 0%, transparent 70%)' }} />
+          <div className="absolute top-0 left-0 right-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(99,102,241,0.25), transparent)' }} />
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center">
             <div className="lg:col-span-7 space-y-4">
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200/20 text-indigo-600 dark:text-indigo-400 text-[9px] sm:text-[10px] font-bold tracking-wider uppercase">
+              <motion.span
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1, duration: 0.4 }}
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200/30 dark:border-indigo-800/40 text-indigo-600 dark:text-indigo-400 text-[9px] sm:text-[10px] font-bold tracking-widest uppercase"
+              >
                 <Cpu size={10} className="animate-pulse" />
                 <span>UNIFIED ENTERPRISE OPERATING SUITE</span>
-              </span>
+              </motion.span>
               
-              <h1 className="text-2xl sm:text-4xl lg:text-6xl font-black text-neutral-900 dark:text-white leading-[1.1] sm:leading-[1.05] tracking-tight">
+              <motion.h1
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.18, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                className="text-2xl sm:text-4xl lg:text-5xl xl:text-6xl font-black text-neutral-900 dark:text-white leading-[1.1] sm:leading-[1.05] tracking-tight"
+              >
                 Aether One:{' '}
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 via-violet-500 to-fuchsia-600 dark:from-indigo-400 dark:via-purple-400 dark:to-pink-500 text-glow">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 via-violet-500 to-fuchsia-600 dark:from-indigo-400 dark:via-purple-400 dark:to-pink-500 text-glow animate-text-shimmer">
                   The ultimate operating shell.
                 </span>
-              </h1>
+              </motion.h1>
               
-              <p className="text-sm sm:text-base lg:text-lg text-neutral-500 dark:text-neutral-400 leading-relaxed">
+              <motion.p
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.28, duration: 0.45 }}
+                className="text-sm sm:text-[15px] lg:text-base text-neutral-500 dark:text-neutral-400 leading-relaxed max-w-xl"
+              >
                 Consolidate your entire business software stack. Access all 40+ spatial databases, cognitive reasoners, billing portals, HR portals, and IT endpoints with one single billing license.
-              </p>
+              </motion.p>
 
-              <div className="flex flex-col xs:flex-row gap-3 pt-1">
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.38, duration: 0.4 }}
+                className="flex flex-col xs:flex-row gap-3 pt-2"
+              >
                 <button
                   onClick={() => {
                     confetti({ particleCount: 120, spread: 60, origin: { y: 0.6 } });
                   }}
-                  className="flex-1 xs:flex-initial px-5 py-3 sm:py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-[13px] shadow-lg shadow-indigo-600/10 transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-[0.97]"
+                  className="btn-primary flex-1 xs:flex-initial"
                 >
                   <span>Evaluate Aether One</span>
                   <ArrowRight size={14} />
                 </button>
                 <button
                   onClick={handleOpenWizard}
-                  className="flex-1 xs:flex-initial px-5 py-3 sm:py-3.5 rounded-xl border border-neutral-300 dark:border-neutral-800 bg-white/40 dark:bg-neutral-900/40 backdrop-blur-sm text-neutral-700 dark:text-neutral-300 font-bold text-xs sm:text-[13px] hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-all text-center active:scale-[0.97]"
+                  className="btn-secondary flex-1 xs:flex-initial"
                 >
                   Configure Custom Suite
                 </button>
-              </div>
+              </motion.div>
             </div>
 
             {/* Graphic sidebar — only on large screens */}
@@ -845,25 +948,28 @@ export default function AllProducts() {
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
 
 
         {/* MAIN LAYOUT SPLIT — sticky dual-panel (exactly like Zoho) */}
         <div className="flex flex-col lg:flex-row gap-8 items-start">
 
           {/* ─── LEFT: Sticky category sidebar ─────────────────────── */}
-          <div className="hidden lg:flex flex-col w-56 xl:w-64 shrink-0 sticky top-24 max-h-[calc(100vh-120px)] overflow-y-auto border border-neutral-200/50 dark:border-neutral-800 rounded-2xl bg-white dark:bg-neutral-900/40 p-4 shadow-sm scrollbar-none">
+          <motion.div
+            initial={{ opacity: 0, x: -16 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.25, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            className="sidebar-panel hidden lg:flex flex-col w-56 xl:w-64 shrink-0 sticky top-[72px] max-h-[calc(100vh-90px)] overflow-y-auto p-4 scrollbar-none"
+          >
             {/* Sidebar header */}
-            <div className="px-1 pb-3 border-b border-neutral-200/40 dark:border-neutral-800/60">
-              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-neutral-400 dark:text-neutral-500">Featured Apps</p>
+            <div className="px-1 pb-3 mb-1" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
+              <p className="text-[9.5px] font-black uppercase tracking-[0.2em] text-neutral-400 dark:text-neutral-500">All Apps</p>
             </div>
 
-            {/* Category nav */}
-            <div className="py-3">
-              {/* "Apps" group label */}
-              <div className="flex items-center gap-2 px-1 py-1.5 mb-1">
-                <span className="w-1 h-4 rounded-full bg-indigo-600 shrink-0" />
-                <span className="text-[12px] font-extrabold text-neutral-900 dark:text-white">Apps</span>
+            <div className="py-2 space-y-0.5">
+              <div className="flex items-center gap-2 px-2 py-1.5 mb-1">
+                <span className="w-1.5 h-4 rounded-full shrink-0" style={{ background: 'linear-gradient(180deg,#6366f1,#8b5cf6)' }} />
+                <span className="text-[11.5px] font-extrabold text-neutral-900 dark:text-white tracking-tight">Apps</span>
               </div>
 
               {categories.filter(c => c !== 'All').map((cat) => {
@@ -872,36 +978,35 @@ export default function AllProducts() {
                   <button
                     key={cat}
                     onClick={() => handleScrollToCategory(cat)}
-                    className={`group w-full flex items-center justify-between text-left px-3 py-2.5 rounded-xl transition-all duration-150 cursor-pointer ${
+                    className={`w-full text-left px-3 py-2.5 rounded-xl text-[12.5px] font-semibold transition-all duration-200 cursor-pointer relative overflow-hidden flex items-center justify-between ${
                       isActive
-                        ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50/60 dark:bg-indigo-950/20 font-bold'
-                        : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200 hover:bg-neutral-50 dark:hover:bg-neutral-800/40'
+                        ? 'sidebar-item-active'
+                        : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200 hover:bg-neutral-100/60 dark:hover:bg-white/5'
                     }`}
                   >
-                    <span className="text-[13px] font-semibold leading-snug">{cat}</span>
-                    {isActive && (
-                      <ChevronRight size={14} className="text-indigo-500 shrink-0 ml-1 animate-pulse" />
-                    )}
+                    <span>{cat}</span>
+                    {isActive && <ChevronRight size={12} className="text-indigo-500 shrink-0" />}
                   </button>
                 );
               })}
             </div>
-          </div>
+          </motion.div>
 
-          {/* ─── Mobile: horizontal pill tabs (sticky below main header) ─── */}
-          <div className="lg:hidden w-full sticky top-14 sm:top-16 z-30 bg-neutral-50/95 dark:bg-neutral-950/95 backdrop-blur-md border-b border-neutral-200/50 dark:border-neutral-800 py-2 px-3 shadow-sm">
-            <div className="flex overflow-x-auto gap-2 scrollbar-none">
+          {/* ─── Mobile: category tabs (sticky) ─── */}
+          <div className="mobile-cat-sticky lg:hidden w-full sticky top-14 sm:top-16 z-30 py-2.5 px-4">
+            <div className="flex overflow-x-auto gap-1.5 scrollbar-none">
               {categories.filter(c => c !== 'All').map((cat) => {
                 const isActive = activeCategory === cat;
                 return (
                   <button
                     key={cat}
                     onClick={() => handleScrollToCategory(cat)}
-                    className={`shrink-0 px-3.5 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap cursor-pointer transition-all ${
+                    className={`shrink-0 px-3.5 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap cursor-pointer transition-all duration-200 ${
                       isActive
-                        ? 'bg-indigo-600 text-white shadow-sm'
-                        : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400'
+                        ? 'text-white'
+                        : 'bg-neutral-100 dark:bg-white/8 text-neutral-500 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-white/12'
                     }`}
+                    style={isActive ? { background: 'linear-gradient(135deg,#6366f1,#7c3aed)', boxShadow: '0 2px 8px rgba(99,102,241,0.3)' } : {}}
                   >
                     {cat}
                   </button>
@@ -915,29 +1020,29 @@ export default function AllProducts() {
             ref={scrollPanelRef}
             className="flex-1 w-full space-y-10"
           >
-            {/* Search + controls row (sticky below main header) */}
-            <div className="sticky top-14 sm:top-16 md:top-20 z-20 bg-neutral-50/95 dark:bg-neutral-950/95 backdrop-blur-md py-3.5 border-b border-neutral-200/40 dark:border-neutral-800/60 flex items-center gap-3 mb-6">
+            {/* Search + controls (sticky) */}
+            <div className="search-sticky sticky top-14 sm:top-16 z-20 py-3 px-0 flex items-center gap-2.5 mb-6">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" size={14} />
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-neutral-500" size={14} />
                 <input
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search apps or features..."
-                  className="w-full bg-neutral-50 dark:bg-neutral-850 pl-9 pr-8 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 text-[12.5px] text-neutral-800 dark:text-neutral-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 transition-all"
+                  className="search-input w-full pl-10 pr-9 py-2.5 text-[13px] text-neutral-800 dark:text-neutral-100 placeholder-neutral-400 dark:placeholder-neutral-500"
                 />
                 {search && (
-                  <button onClick={() => setSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full flex items-center justify-center text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors">
+                  <button onClick={() => setSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 dark:hover:bg-white/10 transition-colors">
                     <X size={11} />
                   </button>
                 )}
               </div>
-              <div className="flex items-center gap-1 p-0.5 rounded-lg bg-neutral-100 dark:bg-neutral-800 border border-neutral-200/40 dark:border-neutral-700/60 shrink-0">
-                <button onClick={() => setViewMode('grid')} className={`w-7 h-7 rounded-md flex items-center justify-center transition-all cursor-pointer ${ viewMode === 'grid' ? 'bg-white dark:bg-neutral-700 text-indigo-600 shadow-sm' : 'text-neutral-400' }`} aria-label="Grid"><LayoutGrid size={13} /></button>
-                <button onClick={() => setViewMode('list')} className={`w-7 h-7 rounded-md flex items-center justify-center transition-all cursor-pointer ${ viewMode === 'list' ? 'bg-white dark:bg-neutral-700 text-indigo-600 shadow-sm' : 'text-neutral-400' }`} aria-label="List"><List size={13} /></button>
+              <div className="flex items-center gap-0.5 p-1 rounded-xl shrink-0" style={{ background: 'rgba(0,0,0,0.05)', border: '1px solid rgba(0,0,0,0.07)' }}>
+                <button onClick={() => setViewMode('grid')} className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200 cursor-pointer ${ viewMode === 'grid' ? 'bg-white dark:bg-white/10 text-indigo-600 shadow-sm' : 'text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300' }`} aria-label="Grid"><LayoutGrid size={13} /></button>
+                <button onClick={() => setViewMode('list')} className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200 cursor-pointer ${ viewMode === 'list' ? 'bg-white dark:bg-white/10 text-indigo-600 shadow-sm' : 'text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300' }`} aria-label="List"><List size={13} /></button>
               </div>
               {highlightedApps.length > 0 && (
-                <button onClick={() => setHighlightedApps([])} className="text-[11px] font-bold text-rose-500 bg-rose-50 dark:bg-rose-950/20 px-2.5 py-1.5 rounded-lg border border-rose-200/20 cursor-pointer flex items-center gap-1 shrink-0">
+                <button onClick={() => setHighlightedApps([])} className="text-[11px] font-bold text-rose-500 px-2.5 py-1.5 rounded-lg cursor-pointer flex items-center gap-1 shrink-0 transition-colors hover:bg-rose-50 dark:hover:bg-rose-500/10" style={{ border: '1px solid rgba(239,68,68,0.2)' }}>
                   <X size={10} /><span className="hidden sm:inline">Clear</span>
                 </button>
               )}
@@ -953,14 +1058,14 @@ export default function AllProducts() {
                       key={catName}
                       ref={(el) => { categoryRefs.current[catName] = el; }}
                       data-category={catName}
-                      className="space-y-5"
+                      className="space-y-4 fade-up"
                     >
                       {/* Category heading */}
-                      <div className="flex items-center justify-between pb-3 border-b border-neutral-200/40 dark:border-neutral-800/80">
-                        <h2 className="text-xl sm:text-2xl font-black text-neutral-900 dark:text-white tracking-tight">
+                      <div className="section-header flex items-center justify-between">
+                        <h2 className="text-xl sm:text-[22px] font-black text-neutral-900 dark:text-white tracking-tight">
                           {catName}
                         </h2>
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800 text-neutral-500 border border-neutral-200/40 dark:border-neutral-700/60">
+                        <span className="text-[10px] font-bold font-mono px-2.5 py-1 rounded-lg text-neutral-500 dark:text-neutral-400" style={{ background: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.07)' }}>
                           {catApps.length} app{catApps.length !== 1 && 's'}
                         </span>
                       </div>
@@ -968,145 +1073,134 @@ export default function AllProducts() {
                       {/* Layout switcher rendering */}
                       <AnimatePresence mode="popLayout">
                       {viewMode === 'grid' ? (
-                        // Bento Grid Mode
+                        // Bento Grid Mode — Premium Card Layout
                         <motion.div
                           layout
                           className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5"
                         >
-                          {catApps.map((app) => (
+                          {catApps.map((app, idx) => (
                             <motion.div
                               key={app.id}
                               layout
-                              initial={{ opacity: 0, scale: 0.96 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              exit={{ opacity: 0, scale: 0.96 }}
-                              transition={{ duration: 0.25 }}
-                              className={`group relative overflow-hidden rounded-3xl border bg-white dark:bg-neutral-900 p-6 flex flex-col justify-between hover:scale-[1.02] hover:border-neutral-300 dark:hover:border-neutral-700 transition-all duration-300 select-none spotlight-card ${
-                                activeStack.includes(app.id)
-                                  ? 'border-indigo-500 dark:border-indigo-550 ring-2 ring-indigo-500/10 shadow-lg shadow-indigo-500/5'
-                                  : highlightedApps.includes(app.id)
-                                    ? 'border-indigo-500 ring-2 ring-indigo-500/20 shadow-lg shadow-indigo-500/10'
-                                    : 'border-neutral-200/60 dark:border-neutral-800'
+                              initial={{ opacity: 0, y: 18 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -8 }}
+                              transition={{ duration: 0.3, delay: idx * 0.05, ease: [0.22, 1, 0.36, 1] }}
+                              className={`product-card p-5 sm:p-6 flex flex-col select-none ${
+                                activeStack.includes(app.id) ? 'is-active' :
+                                highlightedApps.includes(app.id) ? 'is-highlighted' : ''
                               }`}
                               onMouseMove={handleCardMouseMove}
                             >
-                              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                              {/* Top sheen line */}
+                              <div className="absolute top-0 left-0 right-0 h-px opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10" style={{ background: 'linear-gradient(90deg, transparent, rgba(99,102,241,0.15), transparent)' }} />
 
-                              <div>
-                                <div className="flex items-center justify-between mb-4">
-                                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white ${iconGradientClasses[app.accent] || 'bg-neutral-100'} group-hover:scale-108 transition-all duration-300 shadow-sm opacity-95 group-hover:opacity-100`}>
-                                    {React.cloneElement(app.icon as React.ReactElement<any>, { className: ((app.icon as any).props?.className || '') + ' text-white', style: { ...((app.icon as any).props?.style || {}), fontSize: 26 } })}
-                                  </div>
-                                  
-                                  <div className="flex items-center gap-2">
-                                    {app.popular && (
-                                      <span className="rgb-badge shrink-0">
-                                        Popular
-                                      </span>
-                                    )}
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        toggleActiveStack(app.id);
-                                      }}
-                                      className={`w-7 h-7 rounded-lg flex items-center justify-center border transition-all cursor-pointer ${
-                                        activeStack.includes(app.id)
-                                          ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm'
-                                          : 'bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-805 text-neutral-400 hover:text-neutral-700 dark:hover:text-white'
-                                      }`}
-                                      title={activeStack.includes(app.id) ? "Remove Node" : "Add Node"}
-                                    >
-                                      {activeStack.includes(app.id) ? <Check size={13} /> : <Plus size={13} />}
-                                    </button>
-                                  </div>
+                              {/* Card header row */}
+                              <div className="flex items-start justify-between mb-4">
+                                <div className={`card-icon w-12 h-12 rounded-2xl flex items-center justify-center text-white shrink-0 icon-bg-${app.accent || 'indigo'}`}>
+                                  {React.cloneElement(app.icon as React.ReactElement<any>, { 
+                                    className: 'material-symbols-rounded text-white flex items-center justify-center select-none',
+                                    style: { fontSize: '22px', fontVariationSettings: "'FILL' 1, 'wght' 400" }
+                                  })}
                                 </div>
+                                
+                                <div className="flex items-center gap-2">
+                                  {app.popular && <span className="rgb-badge">Popular</span>}
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); toggleActiveStack(app.id); }}
+                                    className={`w-7 h-7 rounded-lg flex items-center justify-center border transition-all duration-200 cursor-pointer ${
+                                      activeStack.includes(app.id)
+                                        ? 'text-white'
+                                        : 'text-neutral-400 hover:text-indigo-600 dark:hover:text-indigo-400'
+                                    }`}
+                                    style={activeStack.includes(app.id) ? { background: 'linear-gradient(135deg,#6366f1,#7c3aed)', border: 'none', boxShadow: '0 2px 8px rgba(99,102,241,0.35)' } : { background: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.09)' }}
+                                    title={activeStack.includes(app.id) ? 'Remove' : 'Add to stack'}
+                                  >
+                                    {activeStack.includes(app.id) ? <Check size={12} /> : <Plus size={12} />}
+                                  </button>
+                                </div>
+                              </div>
 
-                                <h4 className="text-[17px] sm:text-[19px] font-extrabold tracking-tight text-neutral-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 flex items-center gap-1 transition-colors duration-200">
+                              {/* Name + tagline + desc */}
+                              <div className="flex-1 flex flex-col">
+                                <h4 className="text-[16px] sm:text-[17px] font-extrabold tracking-tight text-neutral-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 flex items-center gap-1 transition-colors duration-200 leading-tight">
                                   <span>{app.name}</span>
-                                  <ArrowUpRight size={14} className="opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all duration-200" />
+                                  <ArrowUpRight size={13} className="opacity-0 group-hover:opacity-100 translate-x-0 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all duration-200 shrink-0 text-indigo-500" />
                                 </h4>
                                 
-                                <p className="text-[13px] sm:text-[14px] font-semibold text-neutral-700 dark:text-neutral-300 block mt-1.5 tracking-tight leading-snug">
+                                <p className="text-[12.5px] sm:text-[13px] font-semibold text-neutral-500 dark:text-neutral-400 mt-1.5 leading-snug">
                                   {app.tagline}
                                 </p>
 
-                                <p className="mt-2.5 text-xs sm:text-[13px] text-neutral-500 dark:text-neutral-400 leading-relaxed font-normal">
+                                <p className="mt-3 text-[12px] sm:text-[12.5px] text-neutral-500 dark:text-neutral-500 leading-relaxed font-normal flex-1">
                                   {app.desc}
                                 </p>
                               </div>
 
+                              {/* Footer action */}
                               <div 
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedAppForConsole(app);
-                                  setIsConsoleOpen(true);
-                                }}
-                                className="mt-5 pt-3 border-t border-neutral-100 dark:border-neutral-800/80 w-full flex items-center justify-between text-[11px] text-neutral-450 hover:text-indigo-600 dark:hover:text-indigo-400 font-bold transition-colors cursor-pointer"
+                                onClick={(e) => { e.stopPropagation(); setSelectedAppForConsole(app); setIsConsoleOpen(true); }}
+                                className="mt-4 pt-3.5 flex items-center justify-between text-[11.5px] text-neutral-400 dark:text-neutral-500 hover:text-indigo-600 dark:hover:text-indigo-400 font-semibold transition-colors duration-200 cursor-pointer group/footer"
+                                style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}
                               >
-                                <span className="flex items-center gap-1">
-                                  <Terminal size={12} className="text-neutral-400" />
-                                  <span>Launch Telemetry Console</span>
+                                <span className="flex items-center gap-1.5">
+                                  <Terminal size={11} />
+                                  <span>Telemetry Console</span>
                                 </span>
-                                <span className="text-neutral-300 dark:text-neutral-700">→</span>
+                                <ArrowRight size={11} className="opacity-0 group-hover/footer:opacity-100 group-hover/footer:translate-x-0.5 transition-all duration-200" />
                               </div>
                             </motion.div>
                           ))}
                         </motion.div>
                       ) : (
-                        // Compact List Mode
+                        // Compact List Mode — Premium
                         <motion.div
                           layout
-                          className="space-y-2.5"
+                          className="space-y-2"
                         >
-                          {catApps.map((app) => (
+                          {catApps.map((app, idx) => (
                             <motion.div
                               key={app.id}
                               layout
-                              initial={{ opacity: 0, y: 10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, y: 10 }}
-                              className={`group w-full px-5 py-4 rounded-2.5xl border bg-white dark:bg-neutral-900 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:border-neutral-300 dark:hover:border-neutral-700 transition-all select-none hover:shadow-sm spotlight-card ${
-                                activeStack.includes(app.id)
-                                  ? 'border-indigo-500 dark:border-indigo-550 ring-1 ring-indigo-500/10'
-                                  : highlightedApps.includes(app.id)
-                                    ? 'border-indigo-500 ring-1 ring-indigo-500/20'
-                                    : 'border-neutral-200/50 dark:border-neutral-800'
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              exit={{ opacity: 0 }}
+                              transition={{ duration: 0.25, delay: idx * 0.04, ease: [0.22, 1, 0.36, 1] }}
+                              className={`list-card w-full px-4 sm:px-5 py-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 select-none ${
+                                activeStack.includes(app.id) ? 'is-active' :
+                                highlightedApps.includes(app.id) ? 'is-highlighted' : ''
                               }`}
                               onMouseMove={handleCardMouseMove}
                             >
-                              <div className="flex items-center gap-4 flex-1 pr-4">
-                                <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-white shrink-0 ${iconGradientClasses[app.accent] || 'bg-neutral-100'} group-hover:scale-105 transition-all duration-300 shadow-sm opacity-95 group-hover:opacity-100`}>
-                                  {React.cloneElement(app.icon as React.ReactElement<any>, { className: ((app.icon as any).props?.className || '') + ' text-white', style: { ...((app.icon as any).props?.style || {}), fontSize: 22 } })}
+                              <div className="flex items-center gap-3 sm:gap-3.5 flex-1 min-w-0">
+                                <div className={`card-icon w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center text-white shrink-0 icon-bg-${app.accent || 'indigo'}`}>
+                                  {React.cloneElement(app.icon as React.ReactElement<any>, { 
+                                    className: 'material-symbols-rounded text-white flex items-center justify-center select-none',
+                                    style: { fontSize: '20px', fontVariationSettings: "'FILL' 1, 'wght' 400" }
+                                  })}
                                 </div>
-                                <div>
-                                  <h4 className="text-[14px] sm:text-[15.5px] font-bold tracking-tight text-neutral-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 flex items-center gap-2 transition-colors duration-200">
+                                <div className="min-w-0">
+                                  <h4 className="text-[13.5px] sm:text-[14.5px] font-bold tracking-tight text-neutral-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 flex items-center gap-1.5 transition-colors duration-200 flex-wrap">
                                     <span>{app.name}</span>
-                                    {app.popular && (
-                                      <span className="rgb-badge shrink-0 text-[8px] px-1.5 py-0.5">
-                                        Popular
-                                      </span>
-                                    )}
+                                    {app.popular && <span className="rgb-badge shrink-0">Popular</span>}
                                   </h4>
-                                  <span className="text-xs sm:text-[13px] text-neutral-500 dark:text-neutral-405 font-medium mt-0.5 block leading-tight">
+                                  <span className="text-[11.5px] text-neutral-500 dark:text-neutral-400 font-medium mt-0.5 block leading-tight truncate">
                                     {app.tagline}
                                   </span>
                                 </div>
                               </div>
 
-                              <div className="text-xs sm:text-[13px] text-neutral-400 dark:text-neutral-500 hidden md:block max-w-sm flex-1 truncate font-normal leading-normal">
+                              <div className="text-[12px] text-neutral-400 dark:text-neutral-500 hidden md:block max-w-xs lg:max-w-sm flex-1 line-clamp-1 font-normal">
                                 {app.desc}
                               </div>
 
-                              <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+                              <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-auto">
                                 <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setSelectedAppForConsole(app);
-                                    setIsConsoleOpen(true);
-                                  }}
-                                  className="text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-550 dark:text-neutral-400 transition-colors cursor-pointer flex items-center gap-1"
+                                  onClick={(e) => { e.stopPropagation(); setSelectedAppForConsole(app); setIsConsoleOpen(true); }}
+                                  className="text-[10.5px] font-bold uppercase tracking-wider px-2.5 py-1.5 rounded-lg text-neutral-500 dark:text-neutral-400 transition-colors duration-200 cursor-pointer flex items-center gap-1 hover:text-neutral-700 dark:hover:text-neutral-200"
+                                  style={{ background: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.07)' }}
                                 >
-                                  <Terminal size={11} />
+                                  <Terminal size={10} />
                                   <span>Console</span>
                                 </button>
                                 
@@ -1115,20 +1209,20 @@ export default function AllProducts() {
                                     e.stopPropagation();
                                     toggleActiveStack(app.id);
                                   }}
-                                  className={`text-[10px] font-bold uppercase tracking-wider px-3.5 py-1.5 rounded-lg border transition-all cursor-pointer flex items-center gap-1 ${
+                                  className={`text-[10px] font-bold uppercase tracking-wider px-2.5 sm:px-3.5 py-1.5 rounded-lg border transition-all duration-200 cursor-pointer flex items-center gap-1 ${
                                     activeStack.includes(app.id)
-                                      ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm'
-                                      : `${accentClasses[app.accent]?.bg} ${accentClasses[app.accent]?.text}`
+                                      ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm shadow-indigo-500/20'
+                                      : `${accentClasses[app.accent]?.bg} ${accentClasses[app.accent]?.text} hover:opacity-90`
                                   }`}
                                 >
                                   {activeStack.includes(app.id) ? (
                                     <>
-                                      <Check size={11} />
+                                      <Check size={10} />
                                       <span>Active</span>
                                     </>
                                   ) : (
                                     <>
-                                      <Plus size={11} />
+                                      <Plus size={10} />
                                       <span>Add Node</span>
                                     </>
                                   )}
