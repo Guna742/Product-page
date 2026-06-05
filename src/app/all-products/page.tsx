@@ -240,6 +240,30 @@ export default function AllProducts() {
   // Right scroll panel ref (for split-scroll)
   const scrollPanelRef = useRef<HTMLDivElement | null>(null);
 
+  // Mobile Category Tabs Refs
+  const mobileTabsContainerRef = useRef<HTMLDivElement | null>(null);
+  const mobileTabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+
+  // Scroll mobile active category tab into view when activeCategory changes
+  useEffect(() => {
+    if (activeCategory && mobileTabsContainerRef.current) {
+      const activeTabEl = mobileTabRefs.current[activeCategory];
+      if (activeTabEl) {
+        const container = mobileTabsContainerRef.current;
+        const containerWidth = container.offsetWidth;
+        const tabOffsetLeft = activeTabEl.offsetLeft;
+        const tabWidth = activeTabEl.offsetWidth;
+        
+        // Center the active tab in the container
+        const scrollLeft = tabOffsetLeft - (containerWidth / 2) + (tabWidth / 2);
+        container.scrollTo({
+          left: scrollLeft,
+          behavior: 'smooth'
+        });
+      }
+    }
+  }, [activeCategory]);
+
 
 
   // Category specific premium glow and grading classes
@@ -796,10 +820,10 @@ export default function AllProducts() {
       </div>
 
       {/* ── HEADER ─────────────────────────────────────────────── */}
-      <header className="site-header sticky top-0 z-40 transition-colors duration-300">
+      <header className="site-header transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-3">
           <a href="/" className="flex items-center gap-2 sm:gap-2.5 group shrink-0">
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center shadow-md group-hover:scale-105 transition-transform duration-200" style={{ background: 'linear-gradient(135deg,#6366f1,#7c3aed)', boxShadow: '0 4px 12px rgba(99,102,241,0.35)' }}>
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center shadow-md group-hover:scale-105 transition-transform duration-200" style={{ background: 'linear-gradient(135deg,#6366f1,#7c3aed)', boxShadow: '0 4px 12px rgba(99,102,241,0.35)' }}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
                 <path d="M12 2L2 22h20L12 2zm0 4.5l6.5 12h-13L12 6.5z" fill="white" />
               </svg>
@@ -813,7 +837,7 @@ export default function AllProducts() {
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 onClick={() => setIsFlowOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 sm:hidden rounded-xl text-white text-[11px] font-bold cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 sm:hidden rounded-full text-white text-[11px] font-bold cursor-pointer"
                 style={{ background: 'linear-gradient(135deg,#6366f1,#7c3aed)', boxShadow: '0 3px 10px rgba(99,102,241,0.35)' }}
               >
                 <Layers size={12} />
@@ -823,7 +847,7 @@ export default function AllProducts() {
 
             <button
               onClick={handleOpenWizard}
-              className="flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-[13px] font-bold text-indigo-600 dark:text-indigo-400 rounded-xl cursor-pointer transition-colors duration-200 hover:text-indigo-700 dark:hover:text-indigo-300"
+              className="flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-[13px] font-bold text-indigo-600 dark:text-indigo-400 rounded-full cursor-pointer transition-colors duration-200 hover:text-indigo-700 dark:hover:text-indigo-300"
               style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.18)' }}
             >
               <HelpCircle size={14} className="animate-micro-bounce" />
@@ -832,7 +856,7 @@ export default function AllProducts() {
 
             <button
               onClick={toggleTheme}
-              className="w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer transition-all duration-200 text-neutral-600 dark:text-neutral-300 hover:scale-110"
+              className="w-9 h-9 rounded-full flex items-center justify-center cursor-pointer transition-all duration-200 text-neutral-600 dark:text-neutral-300 hover:scale-110"
               style={{ background: theme === 'dark' ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)', border: theme === 'dark' ? '1px solid rgba(255,255,255,0.09)' : '1px solid rgba(0,0,0,0.08)' }}
               aria-label="Toggle theme"
             >
@@ -959,7 +983,7 @@ export default function AllProducts() {
             initial={{ opacity: 0, x: -16 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.25, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            className="sidebar-panel hidden lg:flex flex-col w-56 xl:w-64 shrink-0 sticky top-[72px] max-h-[calc(100vh-90px)] overflow-y-auto p-4 scrollbar-none"
+            className="sidebar-panel hidden lg:flex flex-col w-56 xl:w-64 shrink-0 sticky top-[96px] max-h-[calc(100vh-112px)] overflow-y-auto p-4 scrollbar-none"
           >
             {/* Sidebar header */}
             <div className="px-1 pb-3 mb-1" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
@@ -993,13 +1017,14 @@ export default function AllProducts() {
           </motion.div>
 
           {/* ─── Mobile: category tabs (sticky) ─── */}
-          <div className="mobile-cat-sticky lg:hidden w-full sticky top-14 sm:top-16 z-30 py-2.5 px-4">
-            <div className="flex overflow-x-auto gap-1.5 scrollbar-none">
+          <div className="mobile-cat-sticky lg:hidden w-full sticky top-[68px] z-30 py-2.5 px-4">
+            <div ref={mobileTabsContainerRef} className="relative flex overflow-x-auto gap-1.5 scrollbar-none">
               {categories.filter(c => c !== 'All').map((cat) => {
                 const isActive = activeCategory === cat;
                 return (
                   <button
                     key={cat}
+                    ref={(el) => { mobileTabRefs.current[cat] = el; }}
                     onClick={() => handleScrollToCategory(cat)}
                     className={`shrink-0 px-3.5 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap cursor-pointer transition-all duration-200 ${
                       isActive
@@ -1021,7 +1046,7 @@ export default function AllProducts() {
             className="flex-1 w-full space-y-10"
           >
             {/* Search + controls (sticky) */}
-            <div className="search-sticky sticky top-14 sm:top-16 z-20 py-3 px-0 flex items-center gap-2.5 mb-6">
+            <div className="search-sticky sticky top-[120px] lg:top-[96px] z-20 py-3 px-0 flex items-center gap-2.5 mb-6">
               <div className="relative flex-1">
                 <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-neutral-500" size={14} />
                 <input
