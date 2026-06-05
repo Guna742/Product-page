@@ -82,7 +82,7 @@
   --bubble-shadow-violet: rgba(139,92,246,0.22);
 }
 
-@theme inline {
+@theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-plus-jakarta-sans), var(--font-inter), sans-serif;
@@ -704,3 +704,120 @@ body {
   background: rgba(3, 3, 6, 0.96);
   border-bottom-color: rgba(255, 255, 255, 0.05);
 }
+
+/* ─────────────────────────────────────────────────────────────
+   GOOGLE REDESIGN CUSTOM CLASSES
+   ───────────────────────────────────────────────────────────── */
+.sub-nav-sticky {
+  position: sticky;
+  top: 76px;
+  z-index: 39;
+  background: rgba(248, 248, 252, 0.92);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 12px -8px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+@media (min-width: 640px) {
+  .sub-nav-sticky {
+    top: 96px;
+  }
+}
+
+.dark .sub-nav-sticky {
+  background: rgba(3, 3, 6, 0.92);
+  border-bottom-color: rgba(255, 255, 255, 0.04);
+  box-shadow: 0 4px 20px -8px rgba(0, 0, 0, 0.3);
+}
+
+/* Carousel */
+.carousel-container {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  gap: 20px;
+  padding: 10px 4px 24px 4px;
+}
+
+.carousel-card {
+  scroll-snap-align: start;
+  flex: 0 0 100%;
+}
+
+@media (min-width: 640px) {
+  .carousel-card {
+    flex: 0 0 calc(50% - 10px);
+  }
+}
+
+@media (min-width: 1024px) {
+  .carousel-card {
+    flex: 0 0 calc(33.333% - 13.333px);
+  }
+}
+
+/* Clean Google-style Grid */
+.google-feature-card {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 28px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02), 0 2px 4px rgba(0, 0, 0, 0.01);
+  transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.dark .google-feature-card {
+  background: rgba(15, 15, 24, 0.85);
+  border-color: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.35);
+}
+
+.google-feature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05), 0 4px 8px rgba(0, 0, 0, 0.02);
+  border-color: rgba(99, 102, 241, 0.2);
+}
+
+.dark .google-feature-card:hover {
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45);
+  border-color: rgba(139, 92, 246, 0.25);
+}
+
+/* Sub-nav jump link action button active state */
+.jump-link-active {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(139, 92, 246, 0.08));
+  color: #4f46e5;
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+.dark .jump-link-active {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.15));
+  color: #818cf8;
+  border-color: rgba(129, 140, 248, 0.35);
+}
+
+/* Custom terminal mockup styling */
+.console-mockup {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  background: #09090b;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+}
+
+.dark .console-mockup {
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+/* Scroll margin offsets to prevent section title occlusion by the sticky header */
+[data-section] {
+  scroll-margin-top: 130px;
+}
+@media (min-width: 640px) {
+  [data-section] {
+    scroll-margin-top: 160px;
+  }
+}
+

@@ -1,36 +1,36 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Search, LayoutGrid, List, Compass, HelpCircle, X, ArrowRight, Check, ExternalLink, 
-  Terminal, Shield, Keyboard, Zap, GitBranch, Layers, Lock, Sliders, Cpu, Sparkles, 
-  Activity, DollarSign, Calendar, MessageSquare, Briefcase, FileText, ShoppingCart, 
-  Database, UserCheck, HardDrive, Mail, Eye, Info, Volume2, ArrowUpRight,
-  Plus, Trash2, Settings, Play, Pause, RefreshCw, SlidersHorizontal, Download, Code, Copy,
-  ChevronRight
+  Search, LayoutGrid, List, Compass, HelpCircle, X, ArrowRight, Check, 
+  Terminal, Layers, Cpu, Sparkles, ArrowUpRight, Plus, Trash2, Play,
+  Shield, Zap, Globe, Star, DollarSign, Users, Lock, BarChart3, Quote
 } from 'lucide-react';
+import Link from 'next/link';
 import { useTheme } from '@/components/ThemeContext';
 import confetti from 'canvas-confetti';
 
 
 
 import { PiCompassDuotone, PiDownloadSimpleDuotone } from 'react-icons/pi';
+import { applications, categories, type AppItem } from '@/data/applications';
 
+interface IconProps {
+  className?: string;
+  style?: React.CSSProperties;
+}
 
-interface AppItem {
-  id: string;
-  name: string;
-  tagline: string;
-  desc: string;
-  category: string;
-  accent: string; // HSL brand mapping
-  popular: boolean;
-  icon: React.ReactNode;
+function renderAppIcon(icon: React.ReactNode, extraClass = '', fontSize = 14) {
+  if (!React.isValidElement<IconProps>(icon)) return icon;
+  return React.cloneElement(icon, {
+    className: `${icon.props.className || ''} ${extraClass}`.trim(),
+    style: { ...icon.props.style, fontSize }
+  });
 }
 
 /* ── Viewport Fade-Up Observer Hook ──────────────────────── */
-function useFadeUpObserver(trigger: any) {
+function useFadeUpObserver(trigger: unknown) {
   useEffect(() => {
     const els = document.querySelectorAll('.fade-up');
     const observer = new IntersectionObserver(
@@ -150,8 +150,11 @@ export default function AllProducts() {
       { text: `[STATUS] ${selectedAppForConsole.name.toUpperCase()} daemon listening on port 8080.`, type: 'success' as const }
     ];
 
-    setConsoleLogs([]);
-    setConsoleToggles({ autoScale: false, highFreqSync: false, devBypass: false });
+    // Set states asynchronously to avoid react-hooks/set-state-in-effect
+    const initTimeout = setTimeout(() => {
+      setConsoleLogs([]);
+      setConsoleToggles({ autoScale: false, highFreqSync: false, devBypass: false });
+    }, 0);
 
     let timer: NodeJS.Timeout;
     let index = 0;
@@ -165,10 +168,12 @@ export default function AllProducts() {
       }
     };
 
-    timer = setTimeout(addNextLog, 100);
+    const runTimeout = setTimeout(addNextLog, 100);
 
     return () => {
-      clearTimeout(timer);
+      clearTimeout(initTimeout);
+      clearTimeout(runTimeout);
+      if (timer) clearTimeout(timer);
     };
   }, [selectedAppForConsole]);
 
@@ -235,34 +240,158 @@ export default function AllProducts() {
     });
   };
 
-  // Category Refs
-  const categoryRefs = useRef<Record<string, HTMLDivElement | null>>({});
-  // Right scroll panel ref (for split-scroll)
-  const scrollPanelRef = useRef<HTMLDivElement | null>(null);
 
-  // Mobile Category Tabs Refs
-  const mobileTabsContainerRef = useRef<HTMLDivElement | null>(null);
-  const mobileTabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
-  // Scroll mobile active category tab into view when activeCategory changes
+  // Google Redesign Sections Refs
+  const aiSectionRef = useRef<HTMLDivElement | null>(null);
+  const labsSectionRef = useRef<HTMLDivElement | null>(null);
+  const playgroundSectionRef = useRef<HTMLDivElement | null>(null);
+  const securitySectionRef = useRef<HTMLDivElement | null>(null);
+  const integrationsSectionRef = useRef<HTMLDivElement | null>(null);
+  const testimonialsSectionRef = useRef<HTMLDivElement | null>(null);
+  const pricingSectionRef = useRef<HTMLDivElement | null>(null);
+  const directorySectionRef = useRef<HTMLDivElement | null>(null);
+  const labsCarouselRef = useRef<HTMLDivElement | null>(null);
+
+  // Stats counter animation
+  const [statsVisible, setStatsVisible] = useState(false);
+  const [counters, setCounters] = useState({ uptime: 0, users: 0, integrations: 0, countries: 0 });
+  const statsRef = useRef<HTMLDivElement | null>(null);
+
   useEffect(() => {
-    if (activeCategory && mobileTabsContainerRef.current) {
-      const activeTabEl = mobileTabRefs.current[activeCategory];
-      if (activeTabEl) {
-        const container = mobileTabsContainerRef.current;
-        const containerWidth = container.offsetWidth;
-        const tabOffsetLeft = activeTabEl.offsetLeft;
-        const tabWidth = activeTabEl.offsetWidth;
-        
-        // Center the active tab in the container
-        const scrollLeft = tabOffsetLeft - (containerWidth / 2) + (tabWidth / 2);
-        container.scrollTo({
-          left: scrollLeft,
-          behavior: 'smooth'
-        });
-      }
+    if (!statsVisible) return;
+    const targets = { uptime: 99.98, users: 40000, integrations: 200, countries: 85 };
+    const duration = 1800;
+    const steps = 60;
+    const interval = duration / steps;
+    let step = 0;
+    const timer = setInterval(() => {
+      step++;
+      const progress = step / steps;
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setCounters({
+        uptime: parseFloat((targets.uptime * eased).toFixed(2)),
+        users: Math.round(targets.users * eased),
+        integrations: Math.round(targets.integrations * eased),
+        countries: Math.round(targets.countries * eased),
+      });
+      if (step >= steps) clearInterval(timer);
+    }, interval);
+    return () => clearInterval(timer);
+  }, [statsVisible]);
+
+  useEffect(() => {
+    if (!statsRef.current) return;
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setStatsVisible(true); }, { threshold: 0.3 });
+    obs.observe(statsRef.current);
+    return () => obs.disconnect();
+  }, []);
+
+  // Pricing state
+  const [pricingPlan, setPricingPlan] = useState<'monthly' | 'annual'>('annual');
+  const [activePricingTier, setActivePricingTier] = useState<number>(1);
+
+  // Testimonial rotation
+  const [activeTestimonial, setActiveTestimonial] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setActiveTestimonial(p => (p + 1) % 4), 4500);
+    return () => clearInterval(t);
+  }, []);
+
+  // Active section state for Google Jump Links
+  const [activeSection, setActiveSection] = useState<string>('ai');
+
+  // Handle Carousel Scrolling
+  const scrollCarousel = (direction: 'left' | 'right') => {
+    if (labsCarouselRef.current) {
+      const container = labsCarouselRef.current;
+      const width = container.offsetWidth;
+      const currentScroll = container.scrollLeft;
+      const scrollAmount = direction === 'left' ? -width * 0.75 : width * 0.75;
+      container.scrollTo({
+        left: currentScroll + scrollAmount,
+        behavior: 'smooth'
+      });
     }
-  }, [activeCategory]);
+  };
+
+  // Handle Jump Link Scroll
+  const handleJumpToSection = (sectionId: string) => {
+    const refMap: Record<string, React.RefObject<HTMLDivElement | null>> = {
+      ai: aiSectionRef,
+      labs: labsSectionRef,
+      playground: playgroundSectionRef,
+      security: securitySectionRef,
+      integrations: integrationsSectionRef,
+      testimonials: testimonialsSectionRef,
+      pricing: pricingSectionRef,
+      directory: directorySectionRef,
+    };
+    const targetRef = refMap[sectionId];
+    if (targetRef && targetRef.current) {
+      const offset = 148;
+      const elementPosition = targetRef.current.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.scrollY - offset;
+      window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+      setActiveSection(sectionId);
+    }
+  };
+
+  // IntersectionObserver for Google Jump Links
+  useEffect(() => {
+    const observerOptions = {
+      root: null,
+      rootMargin: '-148px 0px -45% 0px',
+      threshold: [0, 0.05, 0.1, 0.2]
+    };
+
+    const sectionRefs = {
+      ai: aiSectionRef,
+      labs: labsSectionRef,
+      playground: playgroundSectionRef,
+      security: securitySectionRef,
+      integrations: integrationsSectionRef,
+      testimonials: testimonialsSectionRef,
+      pricing: pricingSectionRef,
+      directory: directorySectionRef,
+    };
+
+    const intersectingMap: Record<string, boolean> = {};
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        const id = (entry.target as HTMLElement).dataset.section;
+        if (id) {
+          intersectingMap[id] = entry.isIntersecting;
+        }
+      });
+
+      const activeIds = Object.keys(intersectingMap).filter(id => intersectingMap[id]);
+      if (activeIds.length > 0) {
+        let bestId = activeIds[0];
+        let minDistance = Infinity;
+
+        activeIds.forEach((id) => {
+          const currentRef = sectionRefs[id as keyof typeof sectionRefs];
+          if (currentRef && currentRef.current) {
+            const top = currentRef.current.getBoundingClientRect().top;
+            const dist = Math.abs(top - 148);
+            if (dist < minDistance) {
+              minDistance = dist;
+              bestId = id;
+            }
+          }
+        });
+        setActiveSection(bestId);
+      }
+    }, observerOptions);
+
+    Object.values(sectionRefs).forEach((ref) => {
+      if (ref.current) observer.observe(ref.current);
+    });
+
+    return () => observer.disconnect();
+  }, []);
 
 
 
@@ -330,291 +459,6 @@ export default function AllProducts() {
     teal: 'bg-gradient-to-br from-teal-400 via-teal-500 to-emerald-600 shadow-md shadow-teal-500/20 dark:shadow-teal-500/10'
   };
 
-  // Applications Database (43 items across Zoho's core domains)
-  const applications: AppItem[] = [
-    // Sales & Marketing
-    {
-      id: 'crm',
-      name: 'Aether CRM',
-      tagline: 'Manage client relationships and workflows.',
-      desc: 'Orchestrate Sales cycles, track active contacts, automate lead qualification, and close deals using localized AI reasoning engines.',
-      category: 'Sales & Marketing',
-      accent: 'indigo',
-      popular: true,
-      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>stacked_line_chart</span>
-    },
-    {
-      id: 'bigin',
-      name: 'Bigin CRM',
-      tagline: 'Pipeline management for small fleets.',
-      desc: 'The visual, single-pipeline CRM designed to help startups, micro-teams, and creators organize deal workflows with absolute ease.',
-      category: 'Sales & Marketing',
-      accent: 'indigo',
-      popular: false,
-      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>trending_up</span>
-    },
-    {
-      id: 'campaigns',
-      name: 'Aether Campaigns',
-      tagline: 'High-performance email marketing.',
-      desc: 'Orchestrate newsletter broadcasts, schedule automated email sequences, and compile visual A/B tests with real-time vector reporting.',
-      category: 'Sales & Marketing',
-      accent: 'indigo',
-      popular: false,
-      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>campaign</span>
-    },
-    {
-      id: 'social',
-      name: 'Aether Social',
-      tagline: 'Centralized social media scheduler.',
-      desc: 'Publish content, schedule threads, monitor brand mentions, and scale community visibility across multiple networks in a single click.',
-      category: 'Sales & Marketing',
-      accent: 'indigo',
-      popular: true,
-      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>chat</span>
-    },
-    {
-      id: 'salesiq',
-      name: 'SalesIQ',
-      tagline: 'Visitor tracking and live support.',
-      desc: 'Identify high-value leads on your website in real-time, compile user click paths, and deliver context-aware support chat routes.',
-      category: 'Sales & Marketing',
-      accent: 'indigo',
-      popular: false,
-      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>visibility</span>
-    },
-    {
-      id: 'pagesense',
-      name: 'PageSense',
-      tagline: 'Optimized conversion & heatmaps.',
-      desc: 'Measure website layout performance using dynamic heatmaps, visitor logs, click tracking, and custom conversion funnel builders.',
-      category: 'Sales & Marketing',
-      accent: 'indigo',
-      popular: false,
-      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>data_thresholding</span>
-    },
-    
-    // Finance & Accounting
-    {
-      id: 'books',
-      name: 'Aether Books',
-      tagline: 'Comprehensive business accounting.',
-      desc: 'A complete tax-ready double-entry ledger tool. Track purchase orders, sync cloud banks, capture expenses, and automate financial reporting.',
-      category: 'Finance & Accounting',
-      accent: 'emerald',
-      popular: true,
-      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>account_balance_wallet</span>
-    },
-    {
-      id: 'invoice',
-      name: 'Aether Invoice',
-      tagline: 'Beautiful automated billing nodes.',
-      desc: 'Build beautiful, custom client invoices. Receive global payments online, configure automated collection warnings, and track client terms.',
-      category: 'Finance & Accounting',
-      accent: 'emerald',
-      popular: false,
-      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>receipt_long</span>
-    },
-    {
-      id: 'expense',
-      name: 'Aether Expense',
-      tagline: 'Receipt scans and approvals.',
-      desc: 'Empower teams to capture purchase receipts on the fly, calculate travel mileage, and orchestrate strict custom manager approval loops.',
-      category: 'Finance & Accounting',
-      accent: 'emerald',
-      popular: false,
-      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>fact_check</span>
-    },
-    {
-      id: 'subscriptions',
-      name: 'Aether Subscriptions',
-      tagline: 'SaaS recurring billing engine.',
-      desc: 'Control customer billing lifecycles. Automate recurring subscription card runs, handle localized tax logic, and reduce churn with dunning syncs.',
-      category: 'Finance & Accounting',
-      accent: 'emerald',
-      popular: true,
-      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>data_thresholding</span>
-    },
-    {
-      id: 'inventory',
-      name: 'Aether Inventory',
-      tagline: 'Smart stock & inventory logistics.',
-      desc: 'Organize purchase orders, track warehouse inventory thresholds, manage items dynamically, and synchronize multichannel retail grids.',
-      category: 'Finance & Accounting',
-      accent: 'emerald',
-      popular: false,
-      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>stacked_line_chart</span>
-    },
-
-    // Email, Storage & Collaboration
-    {
-      id: 'mail',
-      name: 'Aether Mail',
-      tagline: 'Ad-free corporate email hosting.',
-      desc: 'Elite, secure email server space built on private network relays. Featuring comprehensive custom domains and strict anti-spam logic.',
-      category: 'Email & Collaboration',
-      accent: 'amber',
-      popular: true,
-      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>campaign</span>
-    },
-    {
-      id: 'cliq',
-      name: 'Cliq Chat',
-      tagline: 'Context-rich team messaging.',
-      desc: 'Collaborative team chat boards, channels, secure video triggers, and interactive commands to bind your workspace tightly.',
-      category: 'Email & Collaboration',
-      accent: 'amber',
-      popular: false,
-      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>chat</span>
-    },
-    {
-      id: 'workdrive',
-      name: 'WorkDrive',
-      tagline: 'Secure document cloud storage.',
-      desc: 'Organize, sync, and secure collaborative documents and assets across shared folders with advanced file revision history.',
-      category: 'Email & Collaboration',
-      accent: 'amber',
-      popular: false,
-      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>folder</span>
-    },
-    {
-      id: 'meeting',
-      name: 'Aether Meeting',
-      tagline: 'Webinars and browser video calls.',
-      desc: 'Host secure video conferencing, schedule interactive client webinars, and share screens without downloading software.',
-      category: 'Email & Collaboration',
-      accent: 'amber',
-      popular: false,
-      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>video_call</span>
-    },
-
-    // Project & Task Management
-    {
-      id: 'projects',
-      name: 'Aether Projects',
-      tagline: 'Track deliverables and sprints.',
-      desc: 'Coordinate team progress, outline milestones, build interactive Gantt timelines, and manage project deliverables under one spatial view.',
-      category: 'Project & Task Management',
-      accent: 'violet',
-      popular: true,
-      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>task</span>
-    },
-    {
-      id: 'sprints',
-      name: 'Aether Sprints',
-      tagline: 'Agile sprints for dev squads.',
-      desc: 'Visual Kanban boards, custom backlog tracking, user stories, and velocity reports to accelerate collaborative engineering squads.',
-      category: 'Project & Task Management',
-      accent: 'violet',
-      popular: false,
-      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>account_tree</span>
-    },
-
-    // Human Resources
-    {
-      id: 'people',
-      name: 'Aether People',
-      tagline: 'HR portal and attendance logs.',
-      desc: 'Centralize employee directory rosters, manage time-off requests, capture log-in attendance, and scale performance evaluations.',
-      category: 'Human Resources',
-      accent: 'rose',
-      popular: false,
-      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>groups</span>
-    },
-    {
-      id: 'recruit',
-      name: 'Aether Recruit',
-      tagline: 'Applicant tracking pipeline.',
-      desc: 'Streamline resume parse systems, customize interview pipelines, publish to career portals, and automate onboarding offers.',
-      category: 'Human Resources',
-      accent: 'rose',
-      popular: true,
-      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>work</span>
-    },
-
-    // Security & IT Management
-    {
-      id: 'vault',
-      name: 'Aether Vault',
-      tagline: 'Zero-knowledge password locker.',
-      desc: 'Generate, encrypt, and share system passwords client-side. Built on private AES-GCM local-first keys to prevent network leaks.',
-      category: 'IT & Security Management',
-      accent: 'cyan',
-      popular: true,
-      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>lock</span>
-    },
-    {
-      id: 'site24x7',
-      name: 'Site24x7 Monitor',
-      tagline: 'Endpoint server diagnostics.',
-      desc: 'Real-time infrastructure metrics. Monitor cloud database health, website uptime, network routes, and local daemon status.',
-      category: 'IT & Security Management',
-      accent: 'cyan',
-      popular: false,
-      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>trending_up</span>
-    },
-
-    // Developer Platforms & Automations
-    {
-      id: 'creator',
-      name: 'Aether Creator',
-      tagline: 'Low-code custom database builder.',
-      desc: 'Visually assemble enterprise apps. Drag tables, design interface screens, and automate spatial database logic without code.',
-      category: 'Developer & Automations',
-      accent: 'fuchsia',
-      popular: true,
-      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>database</span>
-    },
-    {
-      id: 'flow',
-      name: 'Aether Flow',
-      tagline: 'Connect multi-app API endpoints.',
-      desc: 'Build conditional automation pipelines. Connect external API webhooks, sync cross-app actions, and log event runs instantly.',
-      category: 'Developer & Automations',
-      accent: 'fuchsia',
-      popular: false,
-      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>bolt</span>
-    },
-    {
-      id: 'analytics',
-      name: 'Aether Analytics',
-      tagline: 'Business data intelligence.',
-      desc: 'Compile deep analytics graphs. Synthesize databases into visual charts and dashboard logs with high-performance reporting metrics.',
-      category: 'Developer & Automations',
-      accent: 'fuchsia',
-      popular: true,
-      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>data_thresholding</span>
-    },
-
-    // Commerce & Legal
-    {
-      id: 'commerce',
-      name: 'Aether Commerce',
-      tagline: 'Build online stores and checkout.',
-      desc: 'Setup professional digital storefronts, customize secure checkouts, sync inventory nodes, and manage global orders seamlessly.',
-      category: 'Commerce & Legal',
-      accent: 'teal',
-      popular: false,
-      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>storefront</span>
-    },
-    {
-      id: 'sign',
-      name: 'Aether Sign',
-      tagline: 'AES-secured digital signatures.',
-      desc: 'Legally binding digital signature framework. Lock corporate documents client-side using zero-knowledge private contract validations.',
-      category: 'Commerce & Legal',
-      accent: 'teal',
-      popular: false,
-      icon: <span className="material-symbols-rounded" style={{ fontSize: "inherit", fontVariationSettings: "'FILL' 1" }}>draw</span>
-    },
-  ];
-
-  // Distinct category names
-  const categories = useMemo(() => {
-    const list = Array.from(new Set(applications.map((app) => app.category)));
-    return ['All', ...list];
-  }, [applications]);
-
   // Filter apps
   const filteredApps = useMemo(() => {
     return applications.filter((app) => {
@@ -628,98 +472,16 @@ export default function AllProducts() {
 
       return matchesSearch && matchesHighlight;
     });
-  }, [search, highlightedApps, applications]);
+  }, [search, highlightedApps]);
 
-  // Bind fade-up observer to the filtered list changes
-  useFadeUpObserver(filteredApps);
+  // Filter apps in place for category + search
+  const displayApps = useMemo(() => {
+    if (activeCategory === 'All') return filteredApps;
+    return filteredApps.filter((app) => app.category === activeCategory);
+  }, [filteredApps, activeCategory]);
 
-  // Smooth scroll
-  // Smooth scroll
-  const handleScrollToCategory = (catName: string) => {
-    setActiveCategory(catName);
-    setHighlightedApps([]);
-    if (catName === 'All') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else {
-      const ref = categoryRefs.current[catName];
-      if (ref) {
-        // Calculate offset (header height 80px + sticky search bar height 58px + margin 16px)
-        const headerOffset = 154;
-        const elementPosition = ref.getBoundingClientRect().top;
-        const offsetPosition = elementPosition + window.scrollY - headerOffset;
-        window.scrollTo({
-          top: offsetPosition,
-          behavior: 'smooth'
-        });
-      }
-    }
-  };
-
-  // IntersectionObserver — updates active category as window scrolls (exactly like Zoho)
-  useEffect(() => {
-    const intersectingMap: Record<string, boolean> = {};
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          const cat = (entry.target as HTMLDivElement).dataset.category;
-          if (cat) {
-            intersectingMap[cat] = entry.isIntersecting;
-          }
-        });
-
-        // Check if we are scrolled to the very bottom of the page
-        const isAtBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 150;
-        
-        if (isAtBottom) {
-          const visibleCats = categories.filter((c) => c !== 'All' && categoryRefs.current[c]);
-          if (visibleCats.length > 0) {
-            setActiveCategory(visibleCats[visibleCats.length - 1]);
-            return;
-          }
-        }
-
-        // Find all categories that are currently intersecting
-        const activeCategories = Object.keys(intersectingMap).filter(
-          (cat) => intersectingMap[cat]
-        );
-
-        if (activeCategories.length > 0) {
-          // Select the category closest to the top area (about 154px offset)
-          let bestCat = activeCategories[0];
-          let minTop = Infinity;
-
-          activeCategories.forEach((cat) => {
-            const ref = categoryRefs.current[cat];
-            if (ref) {
-              const top = ref.getBoundingClientRect().top;
-              // We want the section that is closest to our sticky header offset (154px)
-              const dist = Math.abs(top - 154);
-              if (dist < minTop) {
-                minTop = dist;
-                bestCat = cat;
-              }
-            }
-          });
-
-          setActiveCategory(bestCat);
-        }
-      },
-      {
-        root: null, // viewport
-        threshold: [0, 0.05, 0.1, 0.2],
-        rootMargin: '-154px 0px -10% 0px', // check elements below the header/search offset
-      }
-    );
-
-    // Observe all category section elements
-    Object.values(categoryRefs.current).forEach((el) => {
-      if (el) observer.observe(el);
-    });
-
-    return () => observer.disconnect();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filteredApps]);
+  // Bind fade-up observer to the display list changes
+  useFadeUpObserver(displayApps);
 
   const handleOpenWizard = () => {
     setWizardStep(1);
@@ -763,14 +525,7 @@ export default function AllProducts() {
     });
   };
 
-  const handlePlanSelect = (name: string) => {
-    confetti({
-      particleCount: 80,
-      spread: 60,
-      origin: { y: 0.7 },
-      colors: ['#6366f1', '#10b981'],
-    });
-  };
+
 
   const handleCardMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const card = e.currentTarget;
@@ -822,14 +577,14 @@ export default function AllProducts() {
       {/* ── HEADER ─────────────────────────────────────────────── */}
       <header className="site-header transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-3">
-          <a href="/" className="flex items-center gap-2 sm:gap-2.5 group shrink-0">
+          <Link href="/" className="flex items-center gap-2 sm:gap-2.5 group shrink-0">
             <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center shadow-md group-hover:scale-105 transition-transform duration-200" style={{ background: 'linear-gradient(135deg,#6366f1,#7c3aed)', boxShadow: '0 4px 12px rgba(99,102,241,0.35)' }}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
                 <path d="M12 2L2 22h20L12 2zm0 4.5l6.5 12h-13L12 6.5z" fill="white" />
               </svg>
             </div>
             <span className="font-extrabold text-[17px] sm:text-[19px] tracking-tight text-neutral-900 dark:text-white">Aether Hub</span>
-          </a>
+          </Link>
 
           <div className="flex items-center gap-2 sm:gap-2.5">
             {activeStack.length > 0 && (
@@ -974,80 +729,625 @@ export default function AllProducts() {
           </div>
         </motion.div>
 
+        {/* SUB-NAVIGATION JUMP-LINKS BAR */}
+        <div className="sub-nav-sticky w-full rounded-2xl py-3 px-4 mb-10 flex items-center justify-between gap-3 overflow-x-auto scrollbar-none border border-neutral-200/50 dark:border-neutral-800/80">
+          <div className="flex items-center gap-1 sm:gap-1.5">
+            {[
+              { id: 'ai', label: 'Run on AI', icon: <Sparkles size={10} /> },
+              { id: 'labs', label: 'Labs', icon: <Layers size={10} /> },
+              { id: 'playground', label: 'Playground', icon: <Terminal size={10} /> },
+              { id: 'security', label: 'Security', icon: <Shield size={10} /> },
+              { id: 'integrations', label: 'Integrations', icon: <Zap size={10} /> },
+              { id: 'testimonials', label: 'Stories', icon: <Star size={10} /> },
+              { id: 'pricing', label: 'Pricing', icon: <DollarSign size={10} /> },
+              { id: 'directory', label: 'All Products', icon: <Compass size={10} /> },
+            ].map((section) => {
+              const isActive = activeSection === section.id;
+              return (
+                <button
+                  key={section.id}
+                  onClick={() => handleJumpToSection(section.id)}
+                  className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap cursor-pointer transition-all duration-200 border border-transparent ${
+                    isActive
+                      ? 'jump-link-active shadow-sm'
+                      : 'text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100/60 dark:hover:bg-white/5 hover:text-neutral-800 dark:hover:text-neutral-200'
+                  }`}
+                >
+                  {section.icon}
+                  <span>{section.label}</span>
+                </button>
+              );
+            })}
+          </div>
+          
+          <div className="hidden md:flex items-center gap-1.5 text-[10px] font-bold text-neutral-400 select-none shrink-0">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+            <span>AI CORE LIVE</span>
+          </div>
+        </div>
 
-        {/* MAIN LAYOUT SPLIT — sticky dual-panel (exactly like Zoho) */}
-        <div className="flex flex-col lg:flex-row gap-8 items-start">
-
-          {/* ─── LEFT: Sticky category sidebar ─────────────────────── */}
-          <motion.div
-            initial={{ opacity: 0, x: -16 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.25, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            className="sidebar-panel hidden lg:flex flex-col w-56 xl:w-64 shrink-0 sticky top-[96px] max-h-[calc(100vh-112px)] overflow-y-auto p-4 scrollbar-none"
-          >
-            {/* Sidebar header */}
-            <div className="px-1 pb-3 mb-1" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
-              <p className="text-[9.5px] font-black uppercase tracking-[0.2em] text-neutral-400 dark:text-neutral-500">All Apps</p>
-            </div>
-
-            <div className="py-2 space-y-0.5">
-              <div className="flex items-center gap-2 px-2 py-1.5 mb-1">
-                <span className="w-1.5 h-4 rounded-full shrink-0" style={{ background: 'linear-gradient(180deg,#6366f1,#8b5cf6)' }} />
-                <span className="text-[11.5px] font-extrabold text-neutral-900 dark:text-white tracking-tight">Apps</span>
+        {/* SECTION 1: RUN BUSINESS ON AI */}
+        <div
+          ref={aiSectionRef}
+          data-section="ai"
+          className="google-feature-card p-6 sm:p-10 mb-10 overflow-hidden relative"
+        >
+          <div className="absolute top-[30%] left-[60%] w-96 h-96 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 60%)' }} />
+          
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            <div className="lg:col-span-6 space-y-5">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200/30 dark:border-indigo-800/40 text-indigo-600 dark:text-indigo-400 text-[9.5px] font-bold tracking-wider uppercase">
+                <Sparkles size={11} className="animate-pulse" />
+                <span>Next-Gen Business Intelligence</span>
+              </span>
+              
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-neutral-900 dark:text-white leading-tight tracking-tight">
+                Run operations powered by Aether AI.
+              </h2>
+              
+              <p className="text-neutral-500 dark:text-neutral-400 text-sm sm:text-[14.5px] leading-relaxed">
+                Connect your sales boards, database events, and API channels. Aether AI works in the background, auditing client terms, predicting transaction values, and generating reports dynamically.
+              </p>
+              
+              <div className="space-y-3 pt-2">
+                {[
+                  'Cognitive CRM reasoners that qualify leads automatically.',
+                  'Zero-knowledge AES-256 local-first security encryption.',
+                  'Dynamic peer-to-peer data sync using CRDT structures.'
+                ].map((feature, index) => (
+                  <div key={index} className="flex items-start gap-2.5">
+                    <div className="w-5 h-5 rounded-full bg-indigo-500/10 text-indigo-500 flex items-center justify-center shrink-0 mt-0.5">
+                      <Check size={11} />
+                    </div>
+                    <span className="text-xs sm:text-[13px] font-semibold text-neutral-700 dark:text-neutral-300">{feature}</span>
+                  </div>
+                ))}
               </div>
-
-              {categories.filter(c => c !== 'All').map((cat) => {
-                const isActive = activeCategory === cat;
-                return (
-                  <button
-                    key={cat}
-                    onClick={() => handleScrollToCategory(cat)}
-                    className={`w-full text-left px-3 py-2.5 rounded-xl text-[12.5px] font-semibold transition-all duration-200 cursor-pointer relative overflow-hidden flex items-center justify-between ${
-                      isActive
-                        ? 'sidebar-item-active'
-                        : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200 hover:bg-neutral-100/60 dark:hover:bg-white/5'
-                    }`}
-                  >
-                    <span>{cat}</span>
-                    {isActive && <ChevronRight size={12} className="text-indigo-500 shrink-0" />}
-                  </button>
-                );
-              })}
             </div>
-          </motion.div>
 
-          {/* ─── Mobile: category tabs (sticky) ─── */}
-          <div className="mobile-cat-sticky lg:hidden w-full sticky top-[68px] z-30 py-2.5 px-4">
-            <div ref={mobileTabsContainerRef} className="relative flex overflow-x-auto gap-1.5 scrollbar-none">
-              {categories.filter(c => c !== 'All').map((cat) => {
-                const isActive = activeCategory === cat;
-                return (
-                  <button
-                    key={cat}
-                    ref={(el) => { mobileTabRefs.current[cat] = el; }}
-                    onClick={() => handleScrollToCategory(cat)}
-                    className={`shrink-0 px-3.5 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap cursor-pointer transition-all duration-200 ${
-                      isActive
-                        ? 'text-white'
-                        : 'bg-neutral-100 dark:bg-white/8 text-neutral-500 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-white/12'
-                    }`}
-                    style={isActive ? { background: 'linear-gradient(135deg,#6366f1,#7c3aed)', boxShadow: '0 2px 8px rgba(99,102,241,0.3)' } : {}}
-                  >
-                    {cat}
-                  </button>
-                );
-              })}
+            <div className="lg:col-span-6">
+              <div className="w-full aspect-[4/3] rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-950 p-5 flex flex-col justify-between shadow-lg relative overflow-hidden font-mono text-[10.5px]">
+                <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-transparent via-indigo-500 to-transparent animate-scanline" />
+                <div className="flex items-center justify-between border-b border-neutral-800 pb-3 mb-3">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                  </div>
+                  <span className="text-[10px] text-neutral-500">AETHER_REASONER_AGENT v2.0</span>
+                </div>
+                
+                <div className="flex-1 space-y-2 text-neutral-400 overflow-y-auto scrollbar-none pr-1">
+                  <p className="text-neutral-500">&gt; npm run start:agent</p>
+                  <p className="text-indigo-400">[info] Syncing local IndexedDB indexes with Relay nodes...</p>
+                  <p className="text-emerald-400">[ready] Vector DB loaded. CRM deal patterns match (100% security).</p>
+                  <p className="text-amber-400">[warning] API sync throughput at 98% efficiency.</p>
+                  <div className="p-2.5 rounded-lg bg-neutral-900 border border-neutral-800 text-[10px] text-neutral-300 space-y-1">
+                    <p className="font-bold text-indigo-400">🤖 AI Recommendation:</p>
+                    <p>Detected high email campaign bounce rates. Recommending Aether Mail DNS updates.</p>
+                  </div>
+                  <p className="text-neutral-500 animate-pulse">&gt; Auditing network logs... _</p>
+                </div>
+                
+                <div className="border-t border-neutral-800 pt-3 mt-3 flex items-center justify-between text-[9px] text-neutral-500">
+                  <span>Licensing: Bound Integration</span>
+                  <span>CPU Load: 4%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* SECTION 2: AETHER LABS CAROUSEL */}
+        <div
+          ref={labsSectionRef}
+          data-section="labs"
+          className="google-feature-card p-6 sm:p-10 mb-10 overflow-hidden relative"
+        >
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+            <div className="space-y-2.5">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/30 dark:border-emerald-800/40 text-emerald-600 dark:text-emerald-400 text-[9.5px] font-bold tracking-wider uppercase">
+                <Layers size={11} className="animate-pulse" />
+                <span>Aether Labs Experiments</span>
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-black text-neutral-900 dark:text-white tracking-tight">
+                Try new operational experiments.
+              </h2>
+              <p className="text-neutral-500 dark:text-neutral-400 text-sm max-w-xl">
+                Explore tools designed to automate business metrics. Build low-code databases, sync micro-services, and compile dashboards in seconds.
+              </p>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => scrollCarousel('left')}
+                className="w-10 h-10 rounded-full border border-neutral-200 dark:border-neutral-800 flex items-center justify-center text-neutral-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-neutral-100 dark:hover:bg-white/5 transition-all cursor-pointer"
+                aria-label="Scroll Carousel Left"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+              </button>
+              <button
+                onClick={() => scrollCarousel('right')}
+                className="w-10 h-10 rounded-full border border-neutral-200 dark:border-neutral-800 flex items-center justify-center text-neutral-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-neutral-100 dark:hover:bg-white/5 transition-all cursor-pointer"
+                aria-label="Scroll Carousel Right"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+              </button>
             </div>
           </div>
 
-          {/* ─── RIGHT: Content panel (scrolls with window) ──────── */}
           <div
-            ref={scrollPanelRef}
-            className="flex-1 w-full space-y-10"
+            ref={labsCarouselRef}
+            className="carousel-container scrollbar-none"
           >
-            {/* Search + controls (sticky) */}
-            <div className="search-sticky sticky top-[120px] lg:top-[96px] z-20 py-3 px-0 flex items-center gap-2.5 mb-6">
-              <div className="relative flex-1">
+            {[
+              {
+                id: 'creator',
+                title: 'Aether Creator',
+                subtitle: 'Low-Code Custom DB Builder',
+                desc: 'Visually assemble database structures. Drag tables, create relationships, and compile beautiful UI portals without writing a line of code.',
+                accent: 'fuchsia',
+                icon: <span className="material-symbols-rounded">database</span>
+              },
+              {
+                id: 'flow',
+                title: 'Aether Flow',
+                subtitle: 'Connect Multi-App API Endpoints',
+                desc: 'Build conditional automation paths. Route webhooks, trigger events, clean data payloads, and sync files across Aether nodes in real-time.',
+                accent: 'fuchsia',
+                icon: <span className="material-symbols-rounded">bolt</span>
+              },
+              {
+                id: 'analytics',
+                title: 'Aether Analytics',
+                subtitle: 'Business Data Intelligence',
+                desc: 'Synthesize raw database records into beautiful visual dashboards. Monitor transaction values, user analytics, and lead trajectories.',
+                accent: 'fuchsia',
+                icon: <span className="material-symbols-rounded">data_thresholding</span>
+              }
+            ].map((lab) => (
+              <div
+                key={lab.id}
+                className="carousel-card p-6 rounded-2xl border border-neutral-200/50 dark:border-neutral-800/80 bg-neutral-50/50 dark:bg-neutral-900/40 hover:border-indigo-500/30 transition-colors flex flex-col justify-between"
+              >
+                <div className="space-y-4">
+                  <div className={`w-11 h-11 rounded-2xl flex items-center justify-center text-white icon-bg-${lab.accent}`}>
+                    {React.cloneElement(lab.icon as React.ReactElement<{ style?: React.CSSProperties }>, { style: { fontSize: '20px' } })}
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-[15px] sm:text-[16px] text-neutral-900 dark:text-white leading-tight">{lab.title}</h3>
+                    <p className="text-[11.5px] font-bold text-indigo-600 dark:text-indigo-400 mt-1">{lab.subtitle}</p>
+                  </div>
+                  <p className="text-xs sm:text-[12.5px] text-neutral-500 dark:text-neutral-400 leading-relaxed font-normal">{lab.desc}</p>
+                </div>
+                
+                <button
+                  onClick={() => {
+                    setActiveCategory('Developer & Automations');
+                    handleJumpToSection('directory');
+                  }}
+                  className="mt-6 flex items-center gap-1.5 text-[11px] font-bold text-neutral-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors uppercase cursor-pointer"
+                >
+                  <span>Explore Developers Stacks</span>
+                  <ArrowRight size={12} />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* SECTION 3: INTERACTIVE TELEMETRY PLAYGROUND */}
+        <div
+          ref={playgroundSectionRef}
+          data-section="playground"
+          className="google-feature-card p-6 sm:p-10 mb-10 overflow-hidden relative"
+        >
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            <div className="lg:col-span-5 space-y-4">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-50 dark:bg-violet-950/40 border border-violet-200/30 dark:border-violet-800/40 text-violet-600 dark:text-violet-400 text-[9.5px] font-bold tracking-wider uppercase">
+                <Terminal size={11} className="animate-pulse" />
+                <span>Developer Console</span>
+              </span>
+              
+              <h2 className="text-2xl sm:text-3xl font-black text-neutral-900 dark:text-white leading-tight tracking-tight">
+                Live interactive database playground.
+              </h2>
+              
+              <p className="text-neutral-500 dark:text-neutral-400 text-sm sm:text-[14.5px] leading-relaxed">
+                Aether includes a built-in telemetry monitor. Select any integration card from the directory below, launch its console sandbox, toggle Scaling policies, and monitor system loops in real time.
+              </p>
+              
+              <div className="pt-2">
+                <button
+                  onClick={() => {
+                    const matched = applications[0]; // CRM
+                    setSelectedAppForConsole(matched);
+                    setIsConsoleOpen(true);
+                  }}
+                  className="btn-primary"
+                >
+                  <Play size={13} />
+                  <span>Launch CRM Console Demo</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="lg:col-span-7">
+              <div className="console-mockup w-full aspect-[16/10] overflow-hidden flex flex-col">
+                <div className="bg-neutral-900 border-b border-neutral-800/80 px-4 py-2.5 flex items-center justify-between text-[11px] font-bold text-neutral-400 select-none">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                    <span>SYSTEM_TELEMETRY_LOGS</span>
+                  </div>
+                  <span className="text-[10px] text-neutral-500 font-mono">STATUS: OK</span>
+                </div>
+                
+                <div className="flex-1 p-4 font-mono text-[10.5px] text-neutral-400 space-y-2 overflow-y-auto scrollbar-none bg-neutral-950/90">
+                  <p className="text-neutral-500">{"// Select a product card to stream telemetry records."}</p>
+                  <p className="text-indigo-400">&gt; stream: aether-books-daemon</p>
+                  <p className="text-indigo-500">[LOADER] Checking double-entry balances...</p>
+                  <p className="text-emerald-400">[DATABASE] Ledger check verified. 0.00 discrepancy.</p>
+                  <p className="text-neutral-400">[SYSTEM] Automatic invoice trigger set for tomorrow 00:00 UTC.</p>
+                  <p className="text-neutral-500 animate-pulse">&gt; Listening... _</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* SECTION 4: SECURITY & COMPLIANCE */}
+        <div
+          ref={securitySectionRef}
+          data-section="security"
+          className="google-feature-card p-6 sm:p-10 mb-10 overflow-hidden relative"
+        >
+          {/* Ambient glow */}
+          <div className="absolute top-0 right-0 w-80 h-80 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(16,185,129,0.07) 0%, transparent 60%)' }} />
+
+          {/* Header */}
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/30 dark:border-emerald-800/40 text-emerald-600 dark:text-emerald-400 text-[9.5px] font-bold tracking-wider uppercase mb-4">
+              <Shield size={11} className="animate-pulse" />
+              <span>Enterprise-Grade Trust</span>
+            </span>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-neutral-900 dark:text-white leading-tight tracking-tight">
+              Security & Compliance built-in.
+            </h2>
+            <p className="text-neutral-500 dark:text-neutral-400 text-sm mt-3 leading-relaxed max-w-xl mx-auto">
+              Aether is architected with zero-trust security from the ground up. Every integration node runs with end-to-end encryption and enterprise audit trails.
+            </p>
+          </div>
+
+          {/* Animated Stats */}
+          <div ref={statsRef} className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
+            {[
+              { label: 'Uptime SLA', value: counters.uptime.toFixed(2), suffix: '%', icon: <BarChart3 size={18} />, accent: 'emerald' },
+              { label: 'Active Users', value: counters.users.toLocaleString(), suffix: '+', icon: <Users size={18} />, accent: 'indigo' },
+              { label: 'Integrations', value: counters.integrations, suffix: '+', icon: <Zap size={18} />, accent: 'violet' },
+              { label: 'Countries', value: counters.countries, suffix: '+', icon: <Globe size={18} />, accent: 'cyan' },
+            ].map((stat, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                className="p-5 rounded-2xl bg-white dark:bg-neutral-900/60 border border-neutral-200/50 dark:border-neutral-800/60 text-center"
+              >
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white mx-auto mb-3 icon-bg-${stat.accent}`}>
+                  {stat.icon}
+                </div>
+                <div className="text-2xl sm:text-3xl font-black text-neutral-900 dark:text-white">
+                  {stat.value}{stat.suffix}
+                </div>
+                <div className="text-[11px] font-semibold text-neutral-400 mt-1">{stat.label}</div>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Compliance Badge Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {[
+              { title: 'SOC 2 Type II', desc: 'Annual third-party audits of all infrastructure & access controls.', icon: <Lock size={20} />, color: 'indigo' },
+              { title: 'AES-256 Encryption', desc: 'All data at rest and in transit protected by military-grade encryption.', icon: <Shield size={20} />, color: 'emerald' },
+              { title: 'GDPR & CCPA Ready', desc: 'Full data residency controls, right-to-erasure, and consent management.', icon: <Globe size={20} />, color: 'violet' },
+            ].map((item, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, scale: 0.95 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.15 + i * 0.1, duration: 0.4 }}
+                className="p-5 rounded-2xl border border-neutral-200/60 dark:border-neutral-800/60 bg-neutral-50/50 dark:bg-neutral-900/40 flex items-start gap-4 group hover:border-indigo-500/30 transition-colors"
+              >
+                <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-white shrink-0 icon-bg-${item.color}`}>
+                  {item.icon}
+                </div>
+                <div>
+                  <h4 className="font-extrabold text-[14px] text-neutral-900 dark:text-white">{item.title}</h4>
+                  <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 leading-relaxed">{item.desc}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+
+        {/* SECTION 5: INTEGRATIONS ECOSYSTEM */}
+        <div
+          ref={integrationsSectionRef}
+          data-section="integrations"
+          className="google-feature-card p-6 sm:p-10 mb-10 overflow-hidden relative"
+        >
+          <div className="absolute bottom-0 left-[20%] w-96 h-96 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.06) 0%, transparent 60%)' }} />
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            <div className="lg:col-span-5 space-y-5">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200/30 dark:border-amber-800/40 text-amber-600 dark:text-amber-400 text-[9.5px] font-bold tracking-wider uppercase">
+                <Zap size={11} className="animate-pulse" />
+                <span>300+ Native Connections</span>
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-black text-neutral-900 dark:text-white leading-tight tracking-tight">
+                Connect with your existing tools.
+              </h2>
+              <p className="text-neutral-500 dark:text-neutral-400 text-sm sm:text-[14.5px] leading-relaxed">
+                Aether integrates natively with the entire SaaS ecosystem you already use. Zero rip-and-replace. Just plug in and go live in minutes.
+              </p>
+              <div className="space-y-2.5 pt-1">
+                {[
+                  'Bidirectional real-time sync via webhooks.',
+                  'OAuth 2.0 authentication flows built in.',
+                  'API rate-limit management handled automatically.',
+                ].map((f, i) => (
+                  <div key={i} className="flex items-start gap-2.5">
+                    <div className="w-5 h-5 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0 mt-0.5"><Check size={11} /></div>
+                    <span className="text-xs sm:text-[13px] font-semibold text-neutral-700 dark:text-neutral-300">{f}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="lg:col-span-7">
+              {/* Integration Logo Grid */}
+              <div className="grid grid-cols-4 gap-3 sm:gap-4">
+                {[
+                  { name: 'Slack', color: '#E01E5A', icon: '💬' },
+                  { name: 'Stripe', color: '#6772e5', icon: '💳' },
+                  { name: 'GitHub', color: '#181717', icon: '🐙' },
+                  { name: 'Figma', color: '#F24E1E', icon: '🎨' },
+                  { name: 'Notion', color: '#000000', icon: '📝' },
+                  { name: 'Jira', color: '#0052CC', icon: '📋' },
+                  { name: 'HubSpot', color: '#FF7A59', icon: '🔥' },
+                  { name: 'Zoom', color: '#2D8CFF', icon: '📹' },
+                  { name: 'Salesforce', color: '#00A1E0', icon: '☁️' },
+                  { name: 'AWS', color: '#FF9900', icon: '⚙️' },
+                  { name: 'Zapier', color: '#FF4A00', icon: '⚡' },
+                  { name: '+288', color: '#6366f1', icon: '∞' },
+                ].map((integration, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.05, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                    whileHover={{ scale: 1.08, y: -3 }}
+                    className="aspect-square rounded-2xl flex flex-col items-center justify-center gap-1.5 cursor-pointer border border-neutral-200/60 dark:border-neutral-800/60 bg-white dark:bg-neutral-900/60 shadow-sm hover:shadow-md transition-shadow"
+                  >
+                    <span className="text-xl sm:text-2xl">{integration.icon}</span>
+                    <span className="text-[9px] font-bold text-neutral-500 dark:text-neutral-400 text-center leading-none px-1">{integration.name}</span>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* SECTION 6: CUSTOMER STORIES / TESTIMONIALS */}
+        <div
+          ref={testimonialsSectionRef}
+          data-section="testimonials"
+          className="google-feature-card p-6 sm:p-10 mb-10 overflow-hidden relative"
+        >
+          <div className="absolute top-[10%] left-[5%] w-72 h-72 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(244,63,94,0.05) 0%, transparent 60%)' }} />
+
+          <div className="text-center max-w-2xl mx-auto mb-10">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 dark:bg-rose-950/40 border border-rose-200/30 dark:border-rose-800/40 text-rose-600 dark:text-rose-400 text-[9.5px] font-bold tracking-wider uppercase mb-4">
+              <Star size={11} className="animate-pulse" />
+              <span>Customer Stories</span>
+            </span>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-neutral-900 dark:text-white leading-tight tracking-tight">
+              Teams love Aether Hub.
+            </h2>
+            <p className="text-neutral-500 dark:text-neutral-400 text-sm mt-3">Real stories from real operators running their business on Aether.</p>
+          </div>
+
+          {/* Testimonial Carousel */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
+            {[
+              { quote: "Aether replaced 9 different SaaS tools for us. The cognitive CRM alone saved us $14k/year in sales ops overhead. It's the only platform we run our entire revenue engine on.", name: "Sarah Chen", role: "VP of Revenue, Nexus Corp", accent: 'indigo', stars: 5 },
+              { quote: "The CRDT sync engine is insane. Our 50-person remote team works in real time with zero conflicts. We haven't had a data merge issue in 8 months since switching.", name: "Marcus Rodriguez", role: "CTO, Vault Labs", accent: 'emerald', stars: 5 },
+              { quote: "We onboarded our 200-person operations team in 2 days. The wizard suite builder made it stupid easy. No IT required. Our team adopted it immediately.", name: "Priya Patel", role: "Head of Ops, Lumino", accent: 'violet', stars: 5 },
+              { quote: "Aether Books + Invoice together is the most complete financial ops product I've ever used. Our accountants actually love the audit trail. That never happened with any other tool.", name: "James O'Brien", role: "CFO, Meridian Group", accent: 'amber', stars: 5 },
+            ].map((t, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.12, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                className={`p-6 rounded-2xl border bg-white dark:bg-neutral-900/60 transition-all duration-300 cursor-default ${
+                  activeTestimonial === i
+                    ? 'border-indigo-500/40 shadow-lg shadow-indigo-500/5'
+                    : 'border-neutral-200/50 dark:border-neutral-800/60'
+                }`}
+                onClick={() => setActiveTestimonial(i)}
+              >
+                <div className="flex mb-3">
+                  {Array.from({ length: t.stars }).map((_, si) => (
+                    <Star key={si} size={12} className="text-amber-400 fill-amber-400" />
+                  ))}
+                </div>
+                <Quote size={20} className="text-neutral-200 dark:text-neutral-800 mb-2" />
+                <p className="text-sm text-neutral-600 dark:text-neutral-300 leading-relaxed font-medium mb-4">&ldquo;{t.quote}&rdquo;</p>
+                <div className="flex items-center gap-3 pt-3 border-t border-neutral-200/40 dark:border-neutral-800/40">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-[11px] font-black icon-bg-${t.accent}`}>
+                    {t.name.charAt(0)}
+                  </div>
+                  <div>
+                    <div className="text-[12.5px] font-extrabold text-neutral-900 dark:text-white">{t.name}</div>
+                    <div className="text-[10.5px] text-neutral-400 font-medium">{t.role}</div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Testimonial dots */}
+          <div className="flex items-center justify-center gap-2">
+            {[0,1,2,3].map(i => (
+              <button
+                key={i}
+                onClick={() => setActiveTestimonial(i)}
+                className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${ activeTestimonial === i ? 'w-6 bg-indigo-600' : 'w-1.5 bg-neutral-200 dark:bg-neutral-700' }`}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* SECTION 7: PRICING PLANS */}
+        <div
+          ref={pricingSectionRef}
+          data-section="pricing"
+          className="google-feature-card p-6 sm:p-10 mb-10 overflow-hidden relative"
+        >
+          <div className="absolute top-[20%] right-[5%] w-80 h-80 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.07) 0%, transparent 60%)' }} />
+
+          <div className="text-center max-w-2xl mx-auto mb-10">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-50 dark:bg-violet-950/40 border border-violet-200/30 dark:border-violet-800/40 text-violet-600 dark:text-violet-400 text-[9.5px] font-bold tracking-wider uppercase mb-4">
+              <DollarSign size={11} />
+              <span>Simple, Transparent Pricing</span>
+            </span>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-neutral-900 dark:text-white leading-tight tracking-tight">
+              One price. Every product.
+            </h2>
+            <p className="text-neutral-500 dark:text-neutral-400 text-sm mt-3">Bundle any combination of Aether products at massive discounts.</p>
+
+            {/* Toggle */}
+            <div className="inline-flex items-center gap-1 mt-6 p-1 rounded-full bg-neutral-100 dark:bg-neutral-900 border border-neutral-200/50 dark:border-neutral-800">
+              <button
+                onClick={() => setPricingPlan('monthly')}
+                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${ pricingPlan === 'monthly' ? 'bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white shadow-sm' : 'text-neutral-500' }`}
+              >Monthly</button>
+              <button
+                onClick={() => setPricingPlan('annual')}
+                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${ pricingPlan === 'annual' ? 'bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white shadow-sm' : 'text-neutral-500' }`}
+              >
+                Annual <span className="text-emerald-500 ml-1">-30%</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Pricing Tiers */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+            {[
+              {
+                name: 'Starter',
+                desc: 'Perfect for solo builders and small teams.',
+                monthly: 29,
+                annual: 19,
+                color: 'emerald',
+                features: ['Up to 5 Aether apps', '10,000 API calls/mo', 'Community support', 'Local-first storage', '2 team seats'],
+              },
+              {
+                name: 'Pro',
+                desc: 'For growing teams running full operations.',
+                monthly: 79,
+                annual: 55,
+                color: 'indigo',
+                popular: true,
+                features: ['Up to 20 Aether apps', '500,000 API calls/mo', 'Priority support 24/7', 'CRDT cloud sync', '20 team seats', 'Advanced analytics', 'Custom integrations'],
+              },
+              {
+                name: 'Enterprise',
+                desc: 'Unlimited everything for large organizations.',
+                monthly: 249,
+                annual: 175,
+                color: 'violet',
+                features: ['All 40+ Aether apps', 'Unlimited API calls', 'Dedicated account manager', 'SLA 99.99% uptime', 'Unlimited seats', 'SSO & SAML', 'On-premise deployment'],
+              },
+            ].map((tier, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.12, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                onClick={() => setActivePricingTier(i)}
+                className={`relative p-6 rounded-2xl border cursor-pointer transition-all duration-300 ${
+                  activePricingTier === i
+                    ? 'border-indigo-500/50 shadow-xl shadow-indigo-500/10 bg-white dark:bg-neutral-900'
+                    : 'border-neutral-200/50 dark:border-neutral-800/60 bg-neutral-50/50 dark:bg-neutral-900/40 hover:border-indigo-500/20'
+                }`}
+              >
+                {tier.popular && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-[10px] font-extrabold text-white" style={{ background: 'linear-gradient(135deg,#6366f1,#7c3aed)' }}>Most Popular</div>
+                )}
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white mb-4 icon-bg-${tier.color}`}>
+                  <DollarSign size={18} />
+                </div>
+                <h3 className="text-[17px] font-black text-neutral-900 dark:text-white">{tier.name}</h3>
+                <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 mb-4">{tier.desc}</p>
+                <div className="flex items-baseline gap-1 mb-6">
+                  <span className="text-3xl font-black text-neutral-900 dark:text-white">${pricingPlan === 'annual' ? tier.annual : tier.monthly}</span>
+                  <span className="text-xs text-neutral-400">/mo</span>
+                  {pricingPlan === 'annual' && <span className="text-[10px] font-bold text-emerald-500 bg-emerald-50 dark:bg-emerald-950/30 px-2 py-0.5 rounded-full">Save 30%</span>}
+                </div>
+                <ul className="space-y-2.5 mb-6">
+                  {tier.features.map((f, fi) => (
+                    <li key={fi} className="flex items-center gap-2 text-xs font-medium text-neutral-600 dark:text-neutral-300">
+                      <div className={`w-4 h-4 rounded-full flex items-center justify-center icon-bg-${tier.color} shrink-0`}>
+                        <Check size={9} className="text-white" />
+                      </div>
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <button
+                  onClick={(e) => { e.stopPropagation(); }}
+                  className={`w-full py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
+                    activePricingTier === i
+                      ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-md shadow-indigo-500/20'
+                      : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700'
+                  }`}
+                >
+                  Get started with {tier.name}
+                </button>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+
+        {/* SECTION 8: ALL PRODUCTS DIRECTORY */}
+        <div
+          ref={directorySectionRef}
+          data-section="directory"
+          className="w-full pt-10 border-t border-neutral-200/40 dark:border-neutral-800/40"
+        >
+          <div className="text-center max-w-2xl mx-auto space-y-3 mb-10 select-none">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200/30 dark:border-indigo-800/40 text-indigo-600 dark:text-indigo-400 text-[9.5px] font-bold tracking-wider uppercase">
+              <Compass size={11} />
+              <span>Full Product Suite Directory</span>
+            </span>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-neutral-900 dark:text-white tracking-tight">Explore all 40+ products.</h2>
+            <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed">Filter the full operational catalog by business domains to configure your stack.</p>
+          </div>
+
+          {/* MAIN LAYOUT SINGLE GRID — Google-inspired unified grid */}
+          <div className="w-full space-y-6">
+            
+            {/* Filters Bar: Horizontal on Desktop, Dropdown on Mobile */}
+            <div className="py-4 px-0 border-b border-neutral-200/40 dark:border-neutral-800/40 flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+              {/* Search Input */}
+              <div className="relative flex-1 max-w-md">
                 <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-neutral-500" size={14} />
                 <input
                   type="text"
@@ -1062,219 +1362,235 @@ export default function AllProducts() {
                   </button>
                 )}
               </div>
-              <div className="flex items-center gap-0.5 p-1 rounded-xl shrink-0" style={{ background: 'rgba(0,0,0,0.05)', border: '1px solid rgba(0,0,0,0.07)' }}>
-                <button onClick={() => setViewMode('grid')} className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200 cursor-pointer ${ viewMode === 'grid' ? 'bg-white dark:bg-white/10 text-indigo-600 shadow-sm' : 'text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300' }`} aria-label="Grid"><LayoutGrid size={13} /></button>
-                <button onClick={() => setViewMode('list')} className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200 cursor-pointer ${ viewMode === 'list' ? 'bg-white dark:bg-white/10 text-indigo-600 shadow-sm' : 'text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300' }`} aria-label="List"><List size={13} /></button>
+
+              {/* Category Selectors / Pills */}
+              <div className="flex items-center gap-3 w-full md:w-auto overflow-x-auto scrollbar-none py-1">
+                {/* Mobile Dropdown */}
+                <div className="block md:hidden w-full relative">
+                  <select
+                    value={activeCategory}
+                    onChange={(e) => setActiveCategory(e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-[13px] font-semibold text-neutral-800 dark:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                  >
+                    {categories.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Desktop Pills */}
+                <div className="hidden md:flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+                  {categories.map((cat) => {
+                    const isActive = activeCategory === cat;
+                    return (
+                      <button
+                        key={cat}
+                        onClick={() => setActiveCategory(cat)}
+                        className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap cursor-pointer transition-all duration-200 ${
+                          isActive
+                            ? 'text-white bg-indigo-650 shadow-sm shadow-indigo-500/20 border-indigo-600'
+                            : 'bg-neutral-100/80 dark:bg-white/5 border border-transparent text-neutral-500 dark:text-neutral-400 hover:bg-neutral-200/50 dark:hover:bg-white/10 hover:text-neutral-800 dark:hover:text-neutral-200'
+                        }`}
+                      >
+                        {cat}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Grid/List Controls */}
+                <div className="flex items-center gap-0.5 p-1 rounded-xl shrink-0" style={{ background: 'rgba(0,0,0,0.05)', border: '1px solid rgba(0,0,0,0.07)' }}>
+                  <button onClick={() => setViewMode('grid')} className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200 cursor-pointer ${ viewMode === 'grid' ? 'bg-white dark:bg-white/10 text-indigo-600 shadow-sm' : 'text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300' }`} aria-label="Grid"><LayoutGrid size={13} /></button>
+                  <button onClick={() => setViewMode('list')} className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200 cursor-pointer ${ viewMode === 'list' ? 'bg-white dark:bg-white/10 text-indigo-600 shadow-sm' : 'text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300' }`} aria-label="List"><List size={13} /></button>
+                </div>
+
+                {highlightedApps.length > 0 && (
+                  <button onClick={() => setHighlightedApps([])} className="text-[11px] font-bold text-rose-500 px-2.5 py-1.5 rounded-lg cursor-pointer flex items-center gap-1 shrink-0 transition-colors hover:bg-rose-50 dark:hover:bg-rose-500/10" style={{ border: '1px solid rgba(239,68,68,0.2)' }}>
+                    <X size={10} /><span className="hidden sm:inline">Clear</span>
+                  </button>
+                )}
               </div>
-              {highlightedApps.length > 0 && (
-                <button onClick={() => setHighlightedApps([])} className="text-[11px] font-bold text-rose-500 px-2.5 py-1.5 rounded-lg cursor-pointer flex items-center gap-1 shrink-0 transition-colors hover:bg-rose-50 dark:hover:bg-rose-500/10" style={{ border: '1px solid rgba(239,68,68,0.2)' }}>
-                  <X size={10} /><span className="hidden sm:inline">Clear</span>
-                </button>
-              )}
             </div>
 
-              {/* Category sections */}
-              {categories.filter(c => c !== 'All').map((catName) => {
-                  const catApps = filteredApps.filter(app => app.category === catName);
-                  if (catApps.length === 0) return null;
-
-                  return (
-                    <div
-                      key={catName}
-                      ref={(el) => { categoryRefs.current[catName] = el; }}
-                      data-category={catName}
-                      className="space-y-4 fade-up"
+            {/* Layout switcher rendering */}
+            <AnimatePresence mode="popLayout">
+              {viewMode === 'grid' ? (
+                // Bento Grid Mode — Premium Card Layout
+                <motion.div
+                  layout
+                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
+                >
+                  {displayApps.map((app, idx) => (
+                    <motion.div
+                      key={app.id}
+                      layout
+                      initial={{ opacity: 0, y: 18 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      transition={{ duration: 0.3, delay: Math.min(idx * 0.03, 0.3), ease: [0.22, 1, 0.36, 1] }}
+                      className={`product-card p-5 sm:p-6 flex flex-col select-none ${
+                        activeStack.includes(app.id) ? 'is-active' :
+                        highlightedApps.includes(app.id) ? 'is-highlighted' : ''
+                      }`}
+                      onMouseMove={handleCardMouseMove}
                     >
-                      {/* Category heading */}
-                      <div className="section-header flex items-center justify-between">
-                        <h2 className="text-xl sm:text-[22px] font-black text-neutral-900 dark:text-white tracking-tight">
-                          {catName}
-                        </h2>
-                        <span className="text-[10px] font-bold font-mono px-2.5 py-1 rounded-lg text-neutral-500 dark:text-neutral-400" style={{ background: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.07)' }}>
-                          {catApps.length} app{catApps.length !== 1 && 's'}
-                        </span>
+                      {/* Top sheen line */}
+                      <div className="absolute top-0 left-0 right-0 h-px opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10" style={{ background: 'linear-gradient(90deg, transparent, rgba(99,102,241,0.15), transparent)' }} />
+
+                      {/* Card header row */}
+                      <div className="flex items-start justify-between mb-4">
+                        <div className={`card-icon w-12 h-12 rounded-2xl flex items-center justify-center text-white shrink-0 icon-bg-${app.accent || 'indigo'}`}>
+                          {React.cloneElement(app.icon as React.ReactElement<{ className?: string; style?: React.CSSProperties }>, { 
+                            className: 'material-symbols-rounded text-white flex items-center justify-center select-none',
+                            style: { fontSize: '22px', fontVariationSettings: "'FILL' 1, 'wght' 400" }
+                          })}
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          {app.popular && <span className="rgb-badge">Popular</span>}
+                          <button
+                            onClick={(e) => { e.stopPropagation(); toggleActiveStack(app.id); }}
+                            className={`w-7 h-7 rounded-lg flex items-center justify-center border transition-all duration-200 cursor-pointer ${
+                              activeStack.includes(app.id)
+                                ? 'text-white'
+                                : 'text-neutral-400 hover:text-indigo-600 dark:hover:text-indigo-400'
+                            }`}
+                            style={activeStack.includes(app.id) ? { background: 'linear-gradient(135deg,#6366f1,#7c3aed)', border: 'none', boxShadow: '0 2px 8px rgba(99,102,241,0.35)' } : { background: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.09)' }}
+                            title={activeStack.includes(app.id) ? 'Remove' : 'Add to stack'}
+                          >
+                            {activeStack.includes(app.id) ? <Check size={12} /> : <Plus size={12} />}
+                          </button>
+                        </div>
                       </div>
 
-                      {/* Layout switcher rendering */}
-                      <AnimatePresence mode="popLayout">
-                      {viewMode === 'grid' ? (
-                        // Bento Grid Mode — Premium Card Layout
-                        <motion.div
-                          layout
-                          className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5"
+                      {/* Name + tagline + desc */}
+                      <div className="flex-1 flex flex-col">
+                        <h4 className="text-[16px] sm:text-[17px] font-extrabold tracking-tight text-neutral-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 flex items-center gap-1 transition-colors duration-200 leading-tight">
+                          <span>{app.name}</span>
+                          <ArrowUpRight size={13} className="opacity-0 group-hover:opacity-100 translate-x-0 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all duration-200 shrink-0 text-indigo-500" />
+                        </h4>
+                        
+                        <p className="text-[12.5px] sm:text-[13px] font-semibold text-neutral-500 dark:text-neutral-400 mt-1.5 leading-snug">
+                          {app.tagline}
+                        </p>
+
+                        <p className="mt-3 text-[12px] sm:text-[12.5px] text-neutral-500 dark:text-neutral-500 leading-relaxed font-normal flex-1">
+                          {app.desc}
+                        </p>
+                      </div>
+
+                      {/* Footer action */}
+                      <div 
+                        onClick={(e) => { e.stopPropagation(); setSelectedAppForConsole(app); setIsConsoleOpen(true); }}
+                        className="mt-4 pt-3.5 flex items-center justify-between text-[11.5px] text-neutral-400 dark:text-neutral-500 hover:text-indigo-600 dark:hover:text-indigo-400 font-semibold transition-colors duration-200 cursor-pointer group/footer"
+                        style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}
+                      >
+                        <span className="flex items-center gap-1.5">
+                          <Terminal size={11} />
+                          <span>Telemetry Console</span>
+                        </span>
+                        <ArrowRight size={11} className="opacity-0 group-hover/footer:opacity-100 group-hover/footer:translate-x-0.5 transition-all duration-200" />
+                      </div>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              ) : (
+                // Compact List Mode — Premium
+                <motion.div
+                  layout
+                  className="space-y-2"
+                >
+                  {displayApps.map((app, idx) => (
+                    <motion.div
+                      key={app.id}
+                      layout
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.25, delay: Math.min(idx * 0.02, 0.2), ease: [0.22, 1, 0.36, 1] }}
+                      className={`list-card w-full px-4 sm:px-5 py-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 select-none ${
+                        activeStack.includes(app.id) ? 'is-active' :
+                        highlightedApps.includes(app.id) ? 'is-highlighted' : ''
+                      }`}
+                      onMouseMove={handleCardMouseMove}
+                    >
+                      <div className="flex items-center gap-3 sm:gap-3.5 flex-1 min-w-0">
+                        <div className={`card-icon w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center text-white shrink-0 icon-bg-${app.accent || 'indigo'}`}>
+                          {React.cloneElement(app.icon as React.ReactElement<{ className?: string; style?: React.CSSProperties }>, { 
+                            className: 'material-symbols-rounded text-white flex items-center justify-center select-none',
+                            style: { fontSize: '20px', fontVariationSettings: "'FILL' 1, 'wght' 400" }
+                          })}
+                        </div>
+                        <div className="min-w-0">
+                          <h4 className="text-[13.5px] sm:text-[14.5px] font-bold tracking-tight text-neutral-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 flex items-center gap-1.5 transition-colors duration-200 flex-wrap">
+                            <span>{app.name}</span>
+                            {app.popular && <span className="rgb-badge shrink-0">Popular</span>}
+                          </h4>
+                          <span className="text-[11.5px] text-neutral-500 dark:text-neutral-400 font-medium mt-0.5 block leading-tight truncate">
+                            {app.tagline}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="text-[12px] text-neutral-400 dark:text-neutral-500 hidden md:block max-w-xs lg:max-w-sm flex-1 line-clamp-1 font-normal">
+                        {app.desc}
+                      </div>
+
+                      <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-auto">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setSelectedAppForConsole(app); setIsConsoleOpen(true); }}
+                          className="text-[10.5px] font-bold uppercase tracking-wider px-2.5 py-1.5 rounded-lg text-neutral-500 dark:text-neutral-400 transition-colors duration-200 cursor-pointer flex items-center gap-1 hover:text-neutral-700 dark:hover:text-neutral-200"
+                          style={{ background: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.07)' }}
                         >
-                          {catApps.map((app, idx) => (
-                            <motion.div
-                              key={app.id}
-                              layout
-                              initial={{ opacity: 0, y: 18 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, y: -8 }}
-                              transition={{ duration: 0.3, delay: idx * 0.05, ease: [0.22, 1, 0.36, 1] }}
-                              className={`product-card p-5 sm:p-6 flex flex-col select-none ${
-                                activeStack.includes(app.id) ? 'is-active' :
-                                highlightedApps.includes(app.id) ? 'is-highlighted' : ''
-                              }`}
-                              onMouseMove={handleCardMouseMove}
-                            >
-                              {/* Top sheen line */}
-                              <div className="absolute top-0 left-0 right-0 h-px opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10" style={{ background: 'linear-gradient(90deg, transparent, rgba(99,102,241,0.15), transparent)' }} />
-
-                              {/* Card header row */}
-                              <div className="flex items-start justify-between mb-4">
-                                <div className={`card-icon w-12 h-12 rounded-2xl flex items-center justify-center text-white shrink-0 icon-bg-${app.accent || 'indigo'}`}>
-                                  {React.cloneElement(app.icon as React.ReactElement<any>, { 
-                                    className: 'material-symbols-rounded text-white flex items-center justify-center select-none',
-                                    style: { fontSize: '22px', fontVariationSettings: "'FILL' 1, 'wght' 400" }
-                                  })}
-                                </div>
-                                
-                                <div className="flex items-center gap-2">
-                                  {app.popular && <span className="rgb-badge">Popular</span>}
-                                  <button
-                                    onClick={(e) => { e.stopPropagation(); toggleActiveStack(app.id); }}
-                                    className={`w-7 h-7 rounded-lg flex items-center justify-center border transition-all duration-200 cursor-pointer ${
-                                      activeStack.includes(app.id)
-                                        ? 'text-white'
-                                        : 'text-neutral-400 hover:text-indigo-600 dark:hover:text-indigo-400'
-                                    }`}
-                                    style={activeStack.includes(app.id) ? { background: 'linear-gradient(135deg,#6366f1,#7c3aed)', border: 'none', boxShadow: '0 2px 8px rgba(99,102,241,0.35)' } : { background: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.09)' }}
-                                    title={activeStack.includes(app.id) ? 'Remove' : 'Add to stack'}
-                                  >
-                                    {activeStack.includes(app.id) ? <Check size={12} /> : <Plus size={12} />}
-                                  </button>
-                                </div>
-                              </div>
-
-                              {/* Name + tagline + desc */}
-                              <div className="flex-1 flex flex-col">
-                                <h4 className="text-[16px] sm:text-[17px] font-extrabold tracking-tight text-neutral-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 flex items-center gap-1 transition-colors duration-200 leading-tight">
-                                  <span>{app.name}</span>
-                                  <ArrowUpRight size={13} className="opacity-0 group-hover:opacity-100 translate-x-0 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all duration-200 shrink-0 text-indigo-500" />
-                                </h4>
-                                
-                                <p className="text-[12.5px] sm:text-[13px] font-semibold text-neutral-500 dark:text-neutral-400 mt-1.5 leading-snug">
-                                  {app.tagline}
-                                </p>
-
-                                <p className="mt-3 text-[12px] sm:text-[12.5px] text-neutral-500 dark:text-neutral-500 leading-relaxed font-normal flex-1">
-                                  {app.desc}
-                                </p>
-                              </div>
-
-                              {/* Footer action */}
-                              <div 
-                                onClick={(e) => { e.stopPropagation(); setSelectedAppForConsole(app); setIsConsoleOpen(true); }}
-                                className="mt-4 pt-3.5 flex items-center justify-between text-[11.5px] text-neutral-400 dark:text-neutral-500 hover:text-indigo-600 dark:hover:text-indigo-400 font-semibold transition-colors duration-200 cursor-pointer group/footer"
-                                style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}
-                              >
-                                <span className="flex items-center gap-1.5">
-                                  <Terminal size={11} />
-                                  <span>Telemetry Console</span>
-                                </span>
-                                <ArrowRight size={11} className="opacity-0 group-hover/footer:opacity-100 group-hover/footer:translate-x-0.5 transition-all duration-200" />
-                              </div>
-                            </motion.div>
-                          ))}
-                        </motion.div>
-                      ) : (
-                        // Compact List Mode — Premium
-                        <motion.div
-                          layout
-                          className="space-y-2"
+                          <Terminal size={10} />
+                          <span>Console</span>
+                        </button>
+                        
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleActiveStack(app.id);
+                          }}
+                          className={`text-[10px] font-bold uppercase tracking-wider px-2.5 sm:px-3.5 py-1.5 rounded-lg border transition-all duration-200 cursor-pointer flex items-center gap-1 ${
+                            activeStack.includes(app.id)
+                              ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm shadow-indigo-500/20'
+                              : `${accentClasses[app.accent]?.bg} ${accentClasses[app.accent]?.text} hover:opacity-90`
+                          }`}
                         >
-                          {catApps.map((app, idx) => (
-                            <motion.div
-                              key={app.id}
-                              layout
-                              initial={{ opacity: 0, x: -10 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              exit={{ opacity: 0 }}
-                              transition={{ duration: 0.25, delay: idx * 0.04, ease: [0.22, 1, 0.36, 1] }}
-                              className={`list-card w-full px-4 sm:px-5 py-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 select-none ${
-                                activeStack.includes(app.id) ? 'is-active' :
-                                highlightedApps.includes(app.id) ? 'is-highlighted' : ''
-                              }`}
-                              onMouseMove={handleCardMouseMove}
-                            >
-                              <div className="flex items-center gap-3 sm:gap-3.5 flex-1 min-w-0">
-                                <div className={`card-icon w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center text-white shrink-0 icon-bg-${app.accent || 'indigo'}`}>
-                                  {React.cloneElement(app.icon as React.ReactElement<any>, { 
-                                    className: 'material-symbols-rounded text-white flex items-center justify-center select-none',
-                                    style: { fontSize: '20px', fontVariationSettings: "'FILL' 1, 'wght' 400" }
-                                  })}
-                                </div>
-                                <div className="min-w-0">
-                                  <h4 className="text-[13.5px] sm:text-[14.5px] font-bold tracking-tight text-neutral-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 flex items-center gap-1.5 transition-colors duration-200 flex-wrap">
-                                    <span>{app.name}</span>
-                                    {app.popular && <span className="rgb-badge shrink-0">Popular</span>}
-                                  </h4>
-                                  <span className="text-[11.5px] text-neutral-500 dark:text-neutral-400 font-medium mt-0.5 block leading-tight truncate">
-                                    {app.tagline}
-                                  </span>
-                                </div>
-                              </div>
-
-                              <div className="text-[12px] text-neutral-400 dark:text-neutral-500 hidden md:block max-w-xs lg:max-w-sm flex-1 line-clamp-1 font-normal">
-                                {app.desc}
-                              </div>
-
-                              <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-auto">
-                                <button
-                                  onClick={(e) => { e.stopPropagation(); setSelectedAppForConsole(app); setIsConsoleOpen(true); }}
-                                  className="text-[10.5px] font-bold uppercase tracking-wider px-2.5 py-1.5 rounded-lg text-neutral-500 dark:text-neutral-400 transition-colors duration-200 cursor-pointer flex items-center gap-1 hover:text-neutral-700 dark:hover:text-neutral-200"
-                                  style={{ background: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.07)' }}
-                                >
-                                  <Terminal size={10} />
-                                  <span>Console</span>
-                                </button>
-                                
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    toggleActiveStack(app.id);
-                                  }}
-                                  className={`text-[10px] font-bold uppercase tracking-wider px-2.5 sm:px-3.5 py-1.5 rounded-lg border transition-all duration-200 cursor-pointer flex items-center gap-1 ${
-                                    activeStack.includes(app.id)
-                                      ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm shadow-indigo-500/20'
-                                      : `${accentClasses[app.accent]?.bg} ${accentClasses[app.accent]?.text} hover:opacity-90`
-                                  }`}
-                                >
-                                  {activeStack.includes(app.id) ? (
-                                    <>
-                                      <Check size={10} />
-                                      <span>Active</span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Plus size={10} />
-                                      <span>Add Node</span>
-                                    </>
-                                  )}
-                                </button>
-                              </div>
-                            </motion.div>
-                          ))}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                );
-              })}
-
-              {filteredApps.length === 0 && (
-                <div className="text-center py-20 bg-white dark:bg-neutral-900 border border-neutral-200/50 dark:border-neutral-800 rounded-3xl p-8 flex flex-col items-center justify-center gap-4 shadow-sm select-none">
-                  <span className="text-xs text-neutral-400 dark:text-neutral-500">No applications match your filtering criteria.</span>
-                  <button
-                    onClick={() => { setSearch(''); setActiveCategory('All'); setHighlightedApps([]); }}
-                    className="px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-colors cursor-pointer"
-                  >
-                    Clear All Filters
-                  </button>
-                </div>
+                          {activeStack.includes(app.id) ? (
+                            <>
+                              <Check size={10} />
+                              <span>Active</span>
+                            </>
+                          ) : (
+                            <>
+                              <Plus size={10} />
+                              <span>Add Node</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </motion.div>
+                  ))}
+                </motion.div>
               )}
-          </div>{/* end right content panel */}
-        </div>{/* end sticky split container */}
+            </AnimatePresence>
+
+            {displayApps.length === 0 && (
+              <div className="text-center py-20 bg-white dark:bg-neutral-900 border border-neutral-200/50 dark:border-neutral-800 rounded-3xl p-8 flex flex-col items-center justify-center gap-4 shadow-sm select-none">
+                <span className="text-xs text-neutral-400 dark:text-neutral-500">No applications match your filtering criteria.</span>
+                <button
+                  onClick={() => { setSearch(''); setActiveCategory('All'); setHighlightedApps([]); }}
+                  className="px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-colors cursor-pointer"
+                >
+                  Clear All Filters
+                </button>
+              </div>
+            )}
+          </div>{/* end w-full space-y-6 */}
+        </div>{/* end Section 4 wrapper */}
       </main>
 
       {/* FLOAT INTERACTIVE FINDER BUTTON — hidden on mobile when dock is visible, and hidden when footer is in view */}
@@ -1427,7 +1743,7 @@ export default function AllProducts() {
             className="fixed bottom-0 left-0 right-0 sm:bottom-5 sm:left-1/2 sm:-translate-x-1/2 sm:w-[640px] z-40
               glassmorphism sm:rounded-2xl
               border-t sm:border border-neutral-200/60 dark:border-neutral-800/80
-              shadow-2xl"
+              shadow-2xl pb-safe"
           >
             {/* Mobile: compact single row */}
             <div className="flex items-center gap-3 px-4 py-3 sm:hidden">
@@ -1442,7 +1758,7 @@ export default function AllProducts() {
                       onClick={() => toggleActiveStack(id)}
                       className={`w-8 h-8 rounded-lg shrink-0 flex items-center justify-center text-white cursor-pointer active:scale-95 transition-transform ${iconGradientClasses[matched.accent] || 'bg-indigo-600'}`}
                     >
-                      {React.cloneElement(matched.icon as React.ReactElement<any>, { className: ((matched.icon as any).props?.className || '') + ' text-white', style: { ...((matched.icon as any).props?.style || {}), fontSize: 14 } })}
+                      {renderAppIcon(matched.icon, 'text-white', 14)}
                     </button>
                   );
                 })}
@@ -1482,7 +1798,7 @@ export default function AllProducts() {
                       className={`w-7 h-7 rounded-lg shrink-0 flex items-center justify-center text-white cursor-pointer hover:scale-110 transition-transform ${iconGradientClasses[matched.accent] || 'bg-indigo-600'}`}
                       title={`Remove ${matched.name}`}
                     >
-                      {React.cloneElement(matched.icon as React.ReactElement<any>, { className: ((matched.icon as any).props?.className || '') + ' text-white', style: { ...((matched.icon as any).props?.style || {}), fontSize: 13 } })}
+                      {renderAppIcon(matched.icon, 'text-white', 13)}
                     </button>
                   );
                 })}
@@ -1527,7 +1843,7 @@ export default function AllProducts() {
               <div className="p-4 sm:p-6 pt-5 sm:pt-6 border-b border-neutral-200/50 dark:border-neutral-900 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-white shrink-0 ${iconGradientClasses[selectedAppForConsole.accent] || 'bg-neutral-100'}`}>
-                    {React.cloneElement(selectedAppForConsole.icon as React.ReactElement<any>, { className: ((selectedAppForConsole.icon as any).props?.className || '') + ' text-white', style: { ...((selectedAppForConsole.icon as any).props?.style || {}), fontSize: 18 } })}
+                    {renderAppIcon(selectedAppForConsole.icon, 'text-white', 18)}
                   </div>
                   <div>
                     <h3 className="text-[15px] sm:text-[16px] font-black text-neutral-900 dark:text-white tracking-tight flex items-center gap-1.5 flex-wrap">
@@ -1734,7 +2050,7 @@ export default function AllProducts() {
                         }}
                       >
                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-md ${iconGradientClasses[matched.accent] || 'bg-indigo-650'}`}>
-                          {React.cloneElement(matched.icon as React.ReactElement<any>, { className: ((matched.icon as any).props?.className || '') + ' text-white', style: { ...((matched.icon as any).props?.style || {}), fontSize: 18 } })}
+                          {renderAppIcon(matched.icon, 'text-white', 18)}
                         </div>
                         <span className="text-[10px] font-extrabold text-neutral-800 dark:text-neutral-300 bg-white dark:bg-neutral-900 px-2 py-0.5 rounded-md shadow-sm border border-neutral-200/50 dark:border-neutral-800 leading-none">
                           {matched.name.split(' ').pop()}

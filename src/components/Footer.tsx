@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import React, { useState } from 'react';
 
 /* ─── Social icon SVGs ─────────────────────────────────────────── */
@@ -106,14 +107,14 @@ export default function Footer() {
 
           {/* Brand column */}
           <div className="col-span-1 md:col-span-3 lg:col-span-1 space-y-5 mb-4 md:mb-0">
-            <a href="/" className="flex items-center gap-2 group">
+            <Link href="/" className="flex items-center gap-2 group">
               <div className="w-8 h-8 rounded-xl bg-indigo-600 flex items-center justify-center shadow-md shadow-indigo-600/20 group-hover:scale-105 transition-transform">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                   <path d="M12 2L2 22h20L12 2zm0 4.5l6.5 12h-13L12 6.5z" fill="white" />
                 </svg>
               </div>
               <span className="font-black text-lg tracking-tight text-neutral-900 dark:text-white">Aether Hub</span>
-            </a>
+            </Link>
 
             <p className="text-[12.5px] text-neutral-500 dark:text-neutral-400 leading-relaxed max-w-[220px]">
               The unified enterprise operating suite for high-performance teams worldwide.
